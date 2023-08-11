@@ -26,7 +26,6 @@ gradlePlugin {
             implementationClass = 'org.attias.open.interactive.simulation.deployer.SimulationDeployerPlugin'
         }
     }
-
 }
 
 publishing {
@@ -35,13 +34,26 @@ publishing {
             pom {
                 name = rootProject.name
                 description = pluginDescription
-                url = 'http://www.example.com/library'
+                url = 'https://github.com/attiasas/open-interactive-simulation-deployer'
 
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
                         url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
+                }
+
+                developers {
+                    developer {
+                        id = "attiasas"
+                        name = "Assaf Attias"
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/attiasas/open-interactive-simulation-deployer.git")
+                    developerConnection.set("scm:git:git@github.com/attiasas/open-interactive-simulation-deployer.git")
+                    url = "https://github.com/attiasas/open-interactive-simulation-deployer"
                 }
             }
         }
