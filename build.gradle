@@ -1,0 +1,60 @@
+plugins {
+    id 'com.gradle.plugin-publish' version "1.2.0"
+    id 'signing'
+}
+
+group 'org.attias.open.interactive.simulation'
+version '1.0-SNAPSHOT'
+var pluginDescription = "Plugin that can run and deploy simulation made by OpenSimualtion"
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation group: 'org.attias.open.interactive.simulation', name: 'open-interactive-simulation-core', version: '1.0-SNAPSHOT'
+    testImplementation 'org.testng:testng:7.5'
+}
+
+gradlePlugin {
+    plugins {
+        SimulationDeployerPlugin {
+            id = 'org.attias.open.interactive.simulation.deployer'
+            displayName = "Open Simulation Deployer"
+            description = pluginDescription
+            implementationClass = 'org.attias.open.interactive.simulation.deployer.SimulationDeployerPlugin'
+        }
+    }
+
+}
+
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            pom {
+                name = rootProject.name
+                description = pluginDescription
+                url = 'http://www.example.com/library'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    required = project.hasProperty("sign")
+    var signingKey = findProperty("signingKey")
+    var signingPassword = findProperty("signingPassword")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+}
+
+tasks.named('test') {
+    useTestNG()
+}
