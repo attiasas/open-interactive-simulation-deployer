@@ -23,6 +23,15 @@ jobs:
           distribution: "temurin"
           java-version: "11"
 
+      - name: Clone core library
+        run: git clone https://github.com/attiasas/open-interactive-simulation-core.git core-repo
+
+      - name: Build and publish local core library
+        run: |
+          cd core-repo
+          ./gradlew publishToMavenLocal
+          cd ..
+
       # Run tests
       - name: Tests on macOS, Linux
         run: ./gradlew clean check
