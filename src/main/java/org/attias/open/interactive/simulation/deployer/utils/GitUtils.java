@@ -12,6 +12,8 @@ public class GitUtils {
 //    String tag = "v1"; // Replace with the desired tag
 //    String destinationFolder = "C:\\Users\\Assaf Attias\\.ios\\runners\\1.0-SNAPSHOT";
 
+    public static final String OIS_RUNNER_GIT_REPO = "https://github.com/attiasas/open-interactive-simulation-runner.git";
+
     // Folder needs to be created before clone
     public static void cloneRepoByTag(String repositoryURL, String tag, String destinationFolder) throws GitAPIException {
         Git.cloneRepository()
