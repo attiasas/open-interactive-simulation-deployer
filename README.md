@@ -108,20 +108,40 @@ The plugin is not available in Maven central yet, required to be installed local
 ---
 ## ⚙️ Project Configurations
 
-To use the plugin you need to configure some information
-you can do it by adding the plugin Extension in your project `build.gradle`
-```groovy
-simulationDeployer {
-   deployer {
-      title = "test title"
-      version = '1.0-SNAPSHOT'
-      dynamicClass = 'org.example.GreenState'
-   }
+When applying the plugin a new file named `simulation.ois` with default values will be created at your project root directory.
+This file defines all your project information that is needed in order to run and deploy it and allows you to control and configure your project.
+
+Example:
+```json
+{
+  // The title of your project
+  "name" : "OIS simulation",
+  // The state that will be activated when running the simulation
+  "initialState" : "Green",
+  // Map of all the implemented IState classes in your project and their keys.
+  "states" : {
+    "Blue" : "org.example.BlueState",
+    "Red" : "org.example.RedState",
+    "Green" : "org.example.GreenState"
+  },
+  // The deployer configurations
+  "runner" : {
+    // OIS runner version
+    "version" : "1.0-SNAPSHOT",
+    // The platforms that the simulation will run on, must define at least one 
+    // Options: 'Desktop'
+    "types" : [ "Desktop" ],
+    "assetsDirectories" : [ ]
+  }
 }
 ```
 
-The plugin expect a specific project structure inorder to know how to get what it needs from your project.
-This information is stored at the `settings.ios`
+Optionally - You can also control where to read the `simulation.ois` file by adding the plugin Extension to your `build.gradle`:
+```groovy
+oisDeployer {
+   configPath = 'path-to-your-simulation-config-file'
+}
+```
 
 ---
 ## 🏗️ Usage
@@ -131,6 +151,7 @@ All the task exposed by the plugin are grouped under the group `ois`.
 
 ### 🌱 Develop your project
 
+Read the [user guide](https://github.com/attiasas/open-interactive-simulation-core/USER_GUIDE.md) in the core library.
 
 ### 👀 Run your project
 
