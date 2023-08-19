@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class TaskUtils {
     private static final Logger log = LoggerFactory.getLogger(TaskUtils.class);
-    private static final String GROUP_NAME = "open-simulation";
+    private static final String GROUP_NAME = "ois";
 
     public static <T extends Task> TaskProvider<T> registerTaskInProject(String taskName, Class<T> taskClass, String taskDescription, Project project) {
         log.debug("Configure {} task for project", taskName, project.getPath());
