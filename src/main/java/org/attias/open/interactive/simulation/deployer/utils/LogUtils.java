@@ -2,23 +2,9 @@ package org.attias.open.interactive.simulation.deployer.utils;
 
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.io.OutputStream;
-import java.nio.file.Path;
 
-public class IOUtils {
-    public static boolean createDirIfNotExists(Path dirPath, boolean failIfCantCreate) {
-        File dir = dirPath.toFile();
-        if (!dir.exists()) {
-            boolean created = dir.mkdir();
-            if (!created && failIfCantCreate) {
-                throw new RuntimeException("Can't create directory at " + dirPath);
-            }
-            return created;
-        }
-        return false;
-    }
-
+public class LogUtils {
     public static OutputStream getRedirectOutToLogInfo(Logger log) {
         return new OutputStream() {
             private StringBuilder buffer = new StringBuilder();
