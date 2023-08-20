@@ -114,10 +114,8 @@ This file defines all your project information that is needed in order to run an
 Example:
 ```json
 {
-  // The title of your project
-  "name" : "OIS simulation",
-  // The state that will be activated when running the simulation
-  "initialState" : "Green",
+  "name" : "OIS simulation", // The title of your project
+  "initialState" : "Green", // The state that will be activated when running the simulation
   // Map of all the implemented IState classes in your project and their keys.
   "states" : {
     "Blue" : "org.example.BlueState",
@@ -126,20 +124,25 @@ Example:
   },
   // The deployer configurations
   "runner" : {
-    // OIS runner version
-    "version" : "1.0-SNAPSHOT",
-    // The platforms that the simulation will run on, must define at least one 
-    // Options: 'Desktop'
-    "types" : [ "Desktop" ],
-    "assetsDirectories" : [ ]
+    "version" : "0.1", // OIS runner version
+    // The platforms that the simulation will run on, must define at least one
+    "types" : [ "Desktop" ]
   }
 }
 ```
 
-Optionally - You can also control where to read the `simulation.ois` file by adding the plugin Extension to your `build.gradle`:
+### Plugin Extension
+To allow smooth development, you can optionally override some project `simulation.ois` or plugin configurations by specific the `oisDeployer` extension in your `build.gradle`:
 ```groovy
 oisDeployer {
+   // Instead of resolving the runner base on its version in simulation.ois, 
+   // Run the runner project from this directory.
+   runnerPath = 'path-to-dir-of-specific-runner'
+   // Instead of getting the project configurations from the `simulation.ois` file in the project root directory,
+   // Get project configurations from this file. 
    configPath = 'path-to-your-simulation-config-file'
+   // Instead of resolving the assets directory from your project resources, resolve from this path.
+   assetsPath = 'path-to-your-resources-dir'
 }
 ```
 
@@ -151,7 +154,7 @@ All the task exposed by the plugin are grouped under the group `ois`.
 
 ### 🌱 Develop your project
 
-Read the [user guide](https://github.com/attiasas/open-interactive-simulation-core/USER_GUIDE.md) in the core library.
+Read the [user guide](https://github.com/attiasas/open-interactive-simulation-core/blob/master/USER_GUIDE.md) in the core library.
 
 ### 👀 Run your project
 
