@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation group: 'org.attias.open.interactive.simulation', name: 'open-interactive-simulation-core', version: '1.0-SNAPSHOT'
+    implementation group: 'org.attias.open.interactive.simulation', name: 'open-interactive-simulation-core', version: '0.1'
 
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.0.202305301015-r'
 
