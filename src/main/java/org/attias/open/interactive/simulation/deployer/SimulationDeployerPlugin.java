@@ -22,6 +22,7 @@ public class SimulationDeployerPlugin implements Plugin<Project> {
         if (!isProjectCompatible(target)) {
             throw new GradleException("Can't apply IOS Deployer Plugin on " + target.getPath());
         }
+        ExtensionUtils.createDefaultExtensionIfNotExists(target);
         try {
             // Setup project configuration
             if (PluginUtils.createProjectConfigurationIfNotExists(target)) {
