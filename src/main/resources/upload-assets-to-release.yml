@@ -1,0 +1,79 @@
+name: OIS generate release assets for all platforms
+
+on:
+  release:
+    types: [published]
+jobs:
+  upload-release-assets:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macOS-latest ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      # Install required tools
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "15"
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          check-latest: true
+
+      # Get OIS repositories
+      - name: Clone core library
+        run: git clone https://github.com/attiasas/open-interactive-simulation-core.git core-repo
+      - name: Build and publish local core library
+        run: |
+          cd core-repo
+          ./gradlew publishToMavenLocal
+          cd ..
+      - name: Clone deployer plugin
+        run: git clone https://github.com/attiasas/open-interactive-simulation-deployer.git deployer-repo
+      - name: Build and publish local deployer plugin
+        run: |
+          cd deployer-repo
+          ./gradlew publishToMavenLocal
+          cd ..
+
+      # Deploy
+      - name: Deploy
+        run: ./gradlew clean deployProject
+
+      # Upload assets
+      - name: Upload Desktop asset
+        run: cd releaseScripts && npm ci --ignore-scripts && node uploadGeneratedAsset.js
+        env:
+          NAME: simulation-name-${{ matrix.os =~ '^(.*)-latest$' && matches[1] || matrix.os }}.zip
+          ASSET: "asset-in-lib-dir.zip"
+          OWNER: ${{ github.repository_owner }}
+          REPOSITORY: ${{ github.event.repository.name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#      - name: Upload Android asset
+#        if: matrix.os == 'ubuntu-latest'
+#        run: cd releaseScripts && npm ci --ignore-scripts && node uploadGeneratedAsset.js
+#        env:
+#          NAME: simulation-name-android.zip
+#          ASSET: "asset-in-lib-dir.zip"
+#          OWNER: ${{ github.repository_owner }}
+#          REPOSITORY: ${{ github.event.repository.name }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Upload Web asset
+#        if: matrix.os == 'ubuntu-latest'
+#        run: cd releaseScripts && npm ci --ignore-scripts && node uploadGeneratedAsset.js
+#        env:
+#          NAME: simulation-name-web.zip
+#          ASSET: "asset-in-lib-dir.zip"
+#          OWNER: ${{ github.repository_owner }}
+#          REPOSITORY: ${{ github.event.repository.name }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
