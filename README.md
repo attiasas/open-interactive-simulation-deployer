@@ -12,10 +12,10 @@
 - [📚 Overview](#-overview)
 - [📦 Installation](#-installation)
 - [⚙️ Project Configurations](#-project-configurations)
-- [🏗️ Usage](#-usage)
-  - [🌱 Develop your project](#-develop-your-project)
-  - [👀 Run your project](#-run-your-project)
-  - [🚀 Distribute your project](#-distribute-your-project)
+- [🏗️ How to Use](#-how-to-use)
+  - [🌱 Developing Your Project](#-developing-your-project)
+  - [👀 Running Your Project](#-running-your-project)
+  - [🚀 Publishing Your Project](#-publishing-your-project)
 - [🐞 Reporting Issues](#-reporting-issues)
 - [🤝 Contributions](#-contributions)
 
@@ -32,6 +32,10 @@ Paired with the [OIS runners](https://github.com/attiasas/open-interactive-simul
 
 Embark on your project journey within your preferred IDE, without the hassle of learning new tools to develop simulations or games in Java.
 Simplify development and distribution and embrace a more streamlined process.
+
+### 🚥 Requirements
+* Java version `15` or a more recent release.
+* Gradle version `7` or a newer version.
 
 ---
 ## 📦 Installation
@@ -98,7 +102,7 @@ The plugin is not available in Maven central yet, required to be installed local
         id 'org.attias.open.interactive.simulation.deployer' version '1.0-SNAPSHOT'
     }
    ```
-4. Add the core library dependency in your project `build.gradle`
+4. [Optional, Recommended] Add the core library dependency in your project `build.gradle`
    ```groovy
     dependencies {
         implementation group: 'org.attias.open.interactive.simulation', name: 'open-interactive-simulation-core', version: '1.0-SNAPSHOT'
@@ -108,71 +112,127 @@ The plugin is not available in Maven central yet, required to be installed local
 ---
 ## ⚙️ Project Configurations
 
-When applying the plugin a new file named `simulation.ois` with default values will be created at your project root directory.
-This file defines all your project information that is needed in order to run and deploy it and allows you to control and configure your project.
+In order to utilize the plugin and execute OIS projects, it is necessary to set up the configurations or [Generate](#-develop-your-project)
+a file known as `simulation.ois`. This file will contain all the essential project configurations required for running your project.
 
-Example:
+The file follows a JSON format and comprises the subsequent attributes:
+
+| Attribute             | Description                                                                                           |
+|-----------------------|-------------------------------------------------------------------------------------------------------|
+| title                 | The designated title of your simulation project.                                                      |
+| initialState          | The state that will be activated upon initiating the simulation.                                      |
+| states                | A mapping of all implemented IState classes within your project, along with their corresponding keys. |
+| publish               | The configurations for publishing your OIS project and facilitating its distribution.                 |
+| publish.platforms     | The designated platforms on which the simulation will operate, with at least one platform defined.    |
+| publish.iconsDir      | [Optional] The directory housing all project icons.                                                   |
+| publish.publishedName | [Optional, Default is the project name] The name of the resulting artifacts upon publishing.          |
+
+For instance:
 ```json
 {
-  "name" : "OIS simulation", // The title of your project
-  "initialState" : "Green", // The state that will be activated when running the simulation
-  // Map of all the implemented IState classes in your project and their keys.
+  "title" : "OIS simulation", 
+  "initialState" : "Green",
   "states" : {
     "Blue" : "org.example.BlueState",
     "Red" : "org.example.RedState",
     "Green" : "org.example.GreenState"
   },
-  // The deployer configurations
-  "runner" : {
-    "version" : "0.1", // OIS runner version
-    // The platforms that the simulation will run on, must define at least one
-    "types" : [ "Desktop" ]
+  "publish" : {
+    "platforms" : [ "Desktop" ],
+    
+    "publishedName" : "optional-published-project-name",
+    "iconsDir" : "optional-path-to-your-icon-directory"
   }
 }
 ```
 
+### Custom Icons
+
+You have the opportunity to tailor your own custom icons for the project.
+A designated directory should be provided to accommodate these icons.
+You are not obliged to provide a complete set of icons; any missing icons will be substituted with default counterparts.
+
+The directory must contain only one item per combination of dimensions and extensions.
+If multiple items exist, only one will be considered.
+
+The valid extensions for icons are: `png`, `ico`, `icns`.
+
+Acceptable icon dimensions include: `128x128`, `32x32`, `16x16`.
+
 ### Plugin Extension
-To allow smooth development, you can optionally override some project `simulation.ois` or plugin configurations by specific the `oisDeployer` extension in your `build.gradle`:
+For seamless development, the option to override specific project `simulation.ois` or plugin configurations is available.
+This can be achieved by specifying the `oisDeployer` extension within your `build.gradle` file:
+
 ```groovy
 oisDeployer {
-   // Instead of resolving the runner base on its version in simulation.ois, 
-   // Run the runner project from this directory.
-   runnerPath = 'path-to-dir-of-specific-runner'
-   // Instead of getting the project configurations from the `simulation.ois` file in the project root directory,
-   // Get project configurations from this file. 
-   configPath = 'path-to-your-simulation-config-file'
-   // Instead of resolving the assets directory from your project resources, resolve from this path.
-   assetsPath = 'path-to-your-resources-dir'
+    // Instead of resolving the runner based on its version in simulation.ois, 
+    // run the runner project from this directory.
+    runnerPath = 'path-to-dir-of-specific-runner'
+    // Instead of retrieving the project configurations from the `simulation.ois` file in the project root directory,
+    // obtain project configurations from this file.
+    configPath = 'path-to-your-simulation-config-file'
+    // Rather than resolving the assets directory from your project resources, resolve it from this path.
+    assetsPath = 'path-to-your-resources-dir'
 }
 ```
 
 ---
-## 🏗️ Usage
+## 🏗️ How to Use
 
-The plugin exposed gradle tasks to run and distribute your project to different platforms.
-All the task exposed by the plugin are grouped under the group `ois`.
+The plugin offers Gradle tasks that facilitate both the execution and distribution of your project across various platforms. 
+These tasks are grouped under the `ois` category.
 
-### 🌱 Develop your project
+### 🌱 Developing Your Project
 
-Read the [user guide](https://github.com/attiasas/open-interactive-simulation-core/blob/master/USER_GUIDE.md) in the core library.
+To establish the foundation of your OIS project and generate essential files, use the following command:
+   ```bash
+   gradlew initializeProject
+   ```
 
-### 👀 Run your project
+If you wish to make modifications to your project's structure, files, or attributes and ensure the correctness of your configuration, execute:
+   ```bash
+   gradlew validateProject
+   ```
 
-Apply the configurations and run your project locally on your `Desktop` by running the gradle task
+For implementing your OIS project, consider utilizing LibGdx or consult the [user guide](https://github.com/attiasas/open-interactive-simulation-core/blob/master/USER_GUIDE.md)
+for insights into leveraging the core library effectively.
+
+### 👀 Running Your Project
+
+After applying the [configurations](#-project-configurations), you can run your project locally on your `Desktop` by executing:
    ```bash
    gradlew runDesktop
    ```
 
-### 🚀 Distribute your project
+### 🚀 Distributing Your Project
+
+Once you've implemented your project, you can deploy it to generate the necessary production files. 
+These files are essential for running your project on the designated platforms. Use the following command:
+   ```bash
+   gradlew deployProject
+   ```
+
+> **Distributing on the Desktop Platform:**
+> 
+> Note that the generated zip files are specific to the platform they were built on. 
+> For instance, generate the distribution task on a Windows machine for Windows distribution and on a Linux machine for Linux distribution.
+
+The artifacts intended for distribution will be created within your project's `build` directory.
+Inside this directory, you'll find a folder named `OIS` containing zip files tailored for each platform configuration specified in your project's configuration file.
 
 ---
 ## 🐞 Reporting Issues
 
-We highly recommend running Gradle with the ```-d```
-option to get useful and readable debug information if something goes wrong with your build.
+When encountering problems during your build process, 
+we recommend using the `-d` option when running Gradle for detailed debug information.
 
-Please help us improve the library
-by [reporting any issues](https://github.com/jfrog/artifactory-gradle-plugin/issues/new/choose) you encounter.
+If you face issues with running or deploying your project, start fresh by cleaning the runners:
+```bash
+    gradlew cleanRunners
+```
+
+To contribute to the library's improvement, 
+please [report encountered issues](https://github.com/open-interactive-simulation-deployer/issues/new/choose). Your input is valuable to us.
 
 ---
 ## 🤝 Contributions
