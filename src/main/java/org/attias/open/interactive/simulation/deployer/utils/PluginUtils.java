@@ -1,8 +1,10 @@
 package org.attias.open.interactive.simulation.deployer.utils;
 
 import org.attias.open.interactive.simulation.core.backend.config.ProjectConfiguration;
+import org.attias.open.interactive.simulation.core.backend.utils.ProjectUtils;
 import org.attias.open.interactive.simulation.core.utils.IOUtils;
 import org.attias.open.interactive.simulation.deployer.Constant;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Set;
 
 public class PluginUtils {
@@ -20,17 +23,47 @@ public class PluginUtils {
     }
 
     public static boolean createRunnersDirectoryIfNotExists() {
-        return IOUtils.createDirIfNotExists(Constant.RUNNERS_PATH,true);
+        return IOUtils.createDirIfNotExists(Constant.RUNNERS_PATH, true);
     }
 
     public static Path getProjectConfigurationPath(Project project) {
-        Path configFile = project.getProjectDir().toPath().resolve(Constant.PROJECT_CONFIG_FILE_NAME);
-        // override config file location with extension value if exist
         Path override = ExtensionUtils.getOverrideConfigPath(project);
         if (override != null) {
-            configFile = override;
+            return override;
         }
-        return configFile;
+        return project.getProjectDir().toPath().resolve(ProjectConfiguration.DEFAULT_FILE_NAME);
+    }
+
+    public static Path getRunnerDirectory(Project project) {
+        Path override = ExtensionUtils.getOverrideRunnerPath(project);
+        if (override != null) {
+            return override;
+        }
+        return Constant.RUNNERS_PATH.resolve(Constant.RUNNER_VERSION);
+    }
+
+    public static Path getTargetAssetsDirectory(Project project) {
+        return getRunnerDirectory(project).resolve("assets");
+    }
+
+    public static Path getProjectAssetsDirectory(Project project) {
+        Path override = ExtensionUtils.getOverrideAssetsPath(project);
+        if (override != null) {
+            return override;
+        }
+        return getProjectDefaultResourcesDirPath(project);
+    }
+
+    public static Path getProjectDefaultResourcesDirPath(Project project) {
+        File file = project.file("src/main/resources");
+        if (file.exists() && file.isDirectory() && file.list().length > 0) {
+            return file.toPath();
+        }
+        return null;
+    }
+
+    public static Path getProjectOISLibsPath(Project project) {
+        return project.getProjectDir().toPath().resolve("build").resolve(ProjectUtils.OIS);
     }
 
     public static boolean createProjectConfigurationIfNotExists(Project project) throws IOException {
@@ -45,36 +78,34 @@ public class PluginUtils {
 
     private static ProjectConfiguration createProjectConfiguration() {
         ProjectConfiguration configuration = new ProjectConfiguration();
-        configuration.name = Constant.DEFAULT_PROJECT_TITLE;
+        configuration.title = Constant.DEFAULT_PROJECT_TITLE;
         configuration.initialState = "StateKey";
-        configuration.states.put("StateKey", "com.example.IStateClassName");
-        configuration.runner.version = Constant.DEFAULT_RUNNER_VERSION;
-        configuration.runner.types = Constant.APP_TYPES;
+        configuration.states.put("StateKey", "com.example.IStateClassName");;
+        configuration.publish.platforms = Constant.APP_TYPES;
         return configuration;
     }
 
     public static ProjectConfiguration getProjectConfiguration(Project project) throws IOException {
-        return getProjectConfiguration(getProjectConfigurationPath(project));
+        return ProjectConfiguration.get(getProjectConfigurationPath(project));
     }
 
-    public static ProjectConfiguration getProjectConfiguration(Path path) throws IOException {
-        File file = path.toFile();
-        if (file.isDirectory()) {
-            return IOUtils.getObjFromJsonFile(path.resolve(Constant.PROJECT_CONFIG_FILE_NAME).toFile(), ProjectConfiguration.class);
-        } else {
-            return IOUtils.getObjFromJsonFile(file, ProjectConfiguration.class);
+    public static File getProjectJar(Project project) {
+        log.info("{} Getting project Jar file", project.getPath());
+        Set<File> jarFiles = project.getTasks().getByName("jar").getOutputs().getFiles().getFiles();
+        if (jarFiles.isEmpty()) {
+            throw new GradleException("Can't find project jars to deploy into the runners");
         }
-    }
-
-    public static Set<File> getProjectJars(Project project) {
-        return project.getTasks().getByName("jar").getOutputs().getFiles().getFiles();
-    }
-
-    public static Path getProjectDefaultResourcesDirPath(Project project) {
-        File file = project.file("src/main/resources");
-        if (file.exists() && file.isDirectory() && file.list().length > 0) {
-            return file.toPath();
+        for (File jar : jarFiles) {
+            log.info("Using Jar: {}", jar.getAbsolutePath());
         }
-        return null;
+        return new ArrayList<>(jarFiles).get(0);
+    }
+
+    public static String getProjectPublishName(Project project) throws IOException {
+        String name = getProjectConfiguration(project).publish.publishedName;
+        if (name != null && !name.isBlank()) {
+            return name;
+        }
+        return project.getName();
     }
 }

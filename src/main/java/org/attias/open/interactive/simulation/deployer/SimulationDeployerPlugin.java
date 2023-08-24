@@ -1,7 +1,10 @@
 package org.attias.open.interactive.simulation.deployer;
 
+import org.attias.open.interactive.simulation.core.backend.config.ProjectConfiguration;
+import org.attias.open.interactive.simulation.core.backend.engine.AppConfiguration;
 import org.attias.open.interactive.simulation.core.utils.IOUtils;
 import org.attias.open.interactive.simulation.deployer.tasks.InitializeDeployerTask;
+import org.attias.open.interactive.simulation.deployer.tasks.ValidateProjectTask;
 import org.attias.open.interactive.simulation.deployer.utils.ExtensionUtils;
 import org.attias.open.interactive.simulation.deployer.utils.PluginUtils;
 import org.attias.open.interactive.simulation.deployer.utils.TaskUtils;
@@ -23,20 +26,23 @@ public class SimulationDeployerPlugin implements Plugin<Project> {
             throw new GradleException("Can't apply IOS Deployer Plugin on " + target.getPath());
         }
         ExtensionUtils.createDefaultExtensionIfNotExists(target);
+        // Add plugin tasks
+        TaskUtils.addInitProjectTask(target);
+        TaskUtils.addCleanTask(target);
+        TaskProvider<ValidateProjectTask> validationTask = TaskUtils.addValidationTask(target);
+        TaskProvider<InitializeDeployerTask> initTask = TaskUtils.addInitializeDeployerTask(target, validationTask);
+
         try {
-            // Setup project configuration
-            if (PluginUtils.createProjectConfigurationIfNotExists(target)) {
-                log.info("Created {} file for this project", "");
+            ProjectConfiguration configuration = PluginUtils.getProjectConfiguration(target);
+            if (configuration.publish.platforms.contains(AppConfiguration.AppType.Desktop)) {
+                TaskUtils.addRunDesktopTask(target, initTask);
             }
 
-            log.debug("Project Configuration loaded:\n{}", IOUtils.toJson(PluginUtils.getProjectConfiguration(target)));
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            TaskUtils.addDeployTask(target, initTask);
+        } catch (Exception e) {
+            log.error("Could not find valid {} file at {}\nHint: use '{}' task to generate a valid OIS project.", ProjectConfiguration.DEFAULT_FILE_NAME, PluginUtils.getProjectConfigurationPath(target), Constant.INIT_PROJECT_TASK_NAME);
+            e.printStackTrace();
         }
-        // Add plugin tasks
-        TaskProvider<InitializeDeployerTask> initTask = TaskUtils.addInitializeDeployerTask(target);
-        TaskUtils.addRunDesktopTask(target, initTask);
     }
 
     public boolean isProjectCompatible(Project project) {

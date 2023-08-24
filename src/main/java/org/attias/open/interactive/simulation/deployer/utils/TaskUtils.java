@@ -1,8 +1,7 @@
 package org.attias.open.interactive.simulation.deployer.utils;
 
 import org.attias.open.interactive.simulation.deployer.Constant;
-import org.attias.open.interactive.simulation.deployer.tasks.InitializeDeployerTask;
-import org.attias.open.interactive.simulation.deployer.tasks.RunDesktopSimulationTask;
+import org.attias.open.interactive.simulation.deployer.tasks.*;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.UnknownTaskException;
@@ -21,7 +20,49 @@ public class TaskUtils {
         });
     }
 
-    public static TaskProvider<InitializeDeployerTask> addInitializeDeployerTask(Project project) {
+    public static void addCleanTask(Project project) {
+        try {
+            project.getTasks().named(Constant.CLEAN_TASK_NAME, CleanRunnersTask.class);
+        } catch (UnknownTaskException e) {
+            log.debug("Registering '{}' task to the project {}", Constant.CLEAN_TASK_NAME, project.getPath());
+        }
+        registerTaskInProject(
+                Constant.CLEAN_TASK_NAME,
+                CleanRunnersTask.class,
+                Constant.CLEAN_TASK_DESCRIPTION,
+                project
+        );
+    }
+
+    public static void addInitProjectTask(Project project) {
+        try {
+            project.getTasks().named(Constant.INIT_PROJECT_TASK_NAME, InitializeProjectTask.class);
+        } catch (UnknownTaskException e) {
+            log.debug("Registering '{}' task to the project {}", Constant.INIT_PROJECT_TASK_NAME, project.getPath());
+        }
+        registerTaskInProject(
+                Constant.INIT_PROJECT_TASK_NAME,
+                InitializeProjectTask.class,
+                Constant.INIT_PROJECT_TASK_DESCRIPTION,
+                project
+        );
+    }
+
+    public static TaskProvider<ValidateProjectTask> addValidationTask(Project project) {
+        try {
+            return project.getTasks().named(Constant.VALIDATE_TASK_NAME, ValidateProjectTask.class);
+        } catch (UnknownTaskException e) {
+            log.debug("Registering '{}' task to the project {}", Constant.VALIDATE_TASK_NAME, project.getPath());
+        }
+        return registerTaskInProject(
+                Constant.VALIDATE_TASK_NAME,
+                ValidateProjectTask.class,
+                Constant.VALIDATE_TASK_DESCRIPTION,
+                project
+        );
+    }
+
+    public static TaskProvider<InitializeDeployerTask> addInitializeDeployerTask(Project project, TaskProvider<ValidateProjectTask> validationTask) {
         try {
             return project.getTasks().named(Constant.INIT_TASK_NAME, InitializeDeployerTask.class);
         } catch (UnknownTaskException e) {
@@ -33,7 +74,10 @@ public class TaskUtils {
                 Constant.INIT_TASK_DESCRIPTION,
                 project
         );
-        task.configure(initializeDeployerTask -> initializeDeployerTask.dependsOn(project.getTasks().named("build")));
+        task.configure(initializeDeployerTask -> {
+            initializeDeployerTask.dependsOn(validationTask);
+            initializeDeployerTask.dependsOn(project.getTasks().named("build"));
+        });
         return task;
     }
 
@@ -50,5 +94,20 @@ public class TaskUtils {
                 Constant.RUN_DESKTOP_TASK_DESCRIPTION,
                 project
         ).configure(runDesktopSimulationTask -> runDesktopSimulationTask.dependsOn(initTask));
+    }
+
+    public static void addDeployTask(Project project, TaskProvider<InitializeDeployerTask> initTask) {
+        try {
+            project.getTasks().named(Constant.DEPLOY_TASK_NAME);
+            return;
+        } catch (UnknownTaskException e) {
+            log.debug("Registering '{}' task to the project {}", Constant.DEPLOY_TASK_NAME, project.getPath());
+        }
+        registerTaskInProject(
+                Constant.DEPLOY_TASK_NAME,
+                DeployProjectTask.class,
+                Constant.DEPLOY_TASK_DESCRIPTION,
+                project
+        ).configure(deployProjectTask -> deployProjectTask.dependsOn(initTask));
     }
 }
