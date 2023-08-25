@@ -43,10 +43,9 @@ Simplify development and distribution and embrace a more streamlined process.
 The plugin is not available in Maven central yet, required to be installed locally
 
 <details>
+<summary>Manual installation</summary>
 
----
-<summary>Install locally OIS core library</summary>
-
+Install locally OIS core library
 1. Clone the [core library](https://github.com/attiasas/open-interactive-simulation-core)
     ```bash
      git clone https://github.com/attiasas/open-interactive-simulation-core.git
@@ -55,15 +54,8 @@ The plugin is not available in Maven central yet, required to be installed local
    ```bash
     ./gradlew publishToMavenLocal
    ```
-   
----
-</details>
 
-<details>
-
----
-<summary>Install locally the plugin</summary>
-
+Install locally the plugin
 1. Clone this repository
     ```bash
      git clone https://github.com/attiasas/open-interactive-simulation-deployer.git
@@ -73,9 +65,14 @@ The plugin is not available in Maven central yet, required to be installed local
     ./gradlew publishToMavenLocal
    ```
 
----
 </details>
 
+Download the installation bash [script](src/main/resources/installOIS.sh) and run it:
+```bash
+./installOIS.sh
+```
+
+---
 1. Add at the top of your `settings.gradle` the following snippet
    ```groovy
     pluginManagement {
@@ -138,10 +135,7 @@ For instance:
     "Green" : "org.example.GreenState"
   },
   "publish" : {
-    "platforms" : [ "Desktop" ],
-    
-    "publishedName" : "optional-published-project-name",
-    "iconsDir" : "optional-path-to-your-icon-directory"
+    "platforms" : [ "Desktop" ]
   }
 }
 ```
