@@ -135,10 +135,7 @@ For instance:
     "Green" : "org.example.GreenState"
   },
   "publish" : {
-    "platforms" : [ "Desktop" ],
-    
-    "publishedName" : "optional-published-project-name",
-    "iconsDir" : "optional-path-to-your-icon-directory"
+    "platforms" : [ "Desktop" ]
   }
 }
 ```
