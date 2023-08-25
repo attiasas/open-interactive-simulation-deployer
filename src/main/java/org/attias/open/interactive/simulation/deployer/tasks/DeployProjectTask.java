@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -63,12 +61,12 @@ public class DeployProjectTask extends DefaultTask {
      * Runner Assets directory structure at deploy:
      * - TargetAssetsDir
      *  - project assets....
-     *  - .ois    make sure no ois directory exists by project..
+     *  - .ois
      *      - simulation.ois
      *      - icons
-     *          - icon.ico (windows)
-     *          - icon.png (linux)
-     *          - icon.icns (mac)
+     *          - icon.ico (windows for all dims)
+     *          - icon.png (windows/linux for all dims)
+     *          - icon.icns (mac for all dims)
      * @return configurations that was saved as 'simulation.ois'
      * @throws IOException
      */

@@ -1,8 +1,11 @@
 package org.attias.open.interactive.simulation.deployer.utils;
 
 import org.attias.open.interactive.simulation.core.backend.engine.AppConfiguration;
+import org.attias.open.interactive.simulation.core.utils.Version;
+import org.attias.open.interactive.simulation.deployer.Constant;
 import org.attias.open.interactive.simulation.deployer.OISException;
 import org.gradle.api.GradleException;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -52,5 +55,12 @@ public class GradleUtils {
             };
         }
         throw new OISException("Unsupported platform type " + platform);
+    }
+
+    public static void checkGradleVersionSupported(Gradle gradle) throws GradleException {
+        String gradleVersion = gradle.getGradleVersion();
+        if (!new Version(gradleVersion).isAtLeast(Constant.MIN_GRADLE_VERSION)) {
+            throw new OISException("Can't apply OIS deployer plugin on Gradle version " + gradleVersion + ". Minimum supported Gradle is " + Constant.MIN_GRADLE_VERSION);
+        }
     }
 }

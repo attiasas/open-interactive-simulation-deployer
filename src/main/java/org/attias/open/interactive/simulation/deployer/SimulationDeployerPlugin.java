@@ -2,10 +2,10 @@ package org.attias.open.interactive.simulation.deployer;
 
 import org.attias.open.interactive.simulation.core.backend.config.ProjectConfiguration;
 import org.attias.open.interactive.simulation.core.backend.engine.AppConfiguration;
-import org.attias.open.interactive.simulation.core.utils.IOUtils;
 import org.attias.open.interactive.simulation.deployer.tasks.InitializeDeployerTask;
 import org.attias.open.interactive.simulation.deployer.tasks.ValidateProjectTask;
 import org.attias.open.interactive.simulation.deployer.utils.ExtensionUtils;
+import org.attias.open.interactive.simulation.deployer.utils.GradleUtils;
 import org.attias.open.interactive.simulation.deployer.utils.PluginUtils;
 import org.attias.open.interactive.simulation.deployer.utils.TaskUtils;
 import org.gradle.api.GradleException;
@@ -14,8 +14,6 @@ import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class SimulationDeployerPlugin implements Plugin<Project> {
     private static final Logger log = LoggerFactory.getLogger(SimulationDeployerPlugin.class);
@@ -46,6 +44,8 @@ public class SimulationDeployerPlugin implements Plugin<Project> {
     }
 
     public boolean isProjectCompatible(Project project) {
+        // Assert Gradle version compatible
+        GradleUtils.checkGradleVersionSupported(project.getGradle());
         // TODO: to eliminate the setup stage -> to work see artifactory gradle plugin Project<Setting>
 //        project.getBuildscript().getRepositories().add(project.getBuildscript().getRepositories().mavenLocal());
 //        project.getBuildscript().getRepositories().add(project.getBuildscript().getRepositories().mavenCentral());

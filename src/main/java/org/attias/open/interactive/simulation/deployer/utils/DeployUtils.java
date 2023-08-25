@@ -1,7 +1,6 @@
 package org.attias.open.interactive.simulation.deployer.utils;
 
 import org.attias.open.interactive.simulation.core.backend.config.ProjectConfiguration;
-import org.attias.open.interactive.simulation.core.backend.config.PublishConfiguration;
 import org.attias.open.interactive.simulation.core.backend.engine.AppConfiguration;
 import org.attias.open.interactive.simulation.core.backend.utils.ProjectUtils;
 import org.attias.open.interactive.simulation.core.utils.IOUtils;
@@ -48,7 +47,7 @@ public class DeployUtils {
         int[] sizes = ProjectUtils.ICON_SIZES;
         String [] extensions = ProjectUtils.ICON_EXTENSIONS;
         Set<String> foundCombinations = new HashSet<>();
-
+        // Custom
         if (configuration.publish.iconsDir != null) {
             Path iconsSrcDir = Paths.get(configuration.publish.iconsDir);
             if (iconsSrcDir.toFile().exists()) {
@@ -69,7 +68,6 @@ public class DeployUtils {
     }
 
     private static void copyCustomIcons(Path iconsSrcDir, Path iconsDir, String [] extensions, int[] sizes, Set<String> foundCombinations) throws IOException {
-        // Custom
         File[] customIcons = iconsSrcDir.toFile().listFiles();
         for (File icon : customIcons) {
             String extension = getIconExtension(icon, extensions);
@@ -93,45 +91,6 @@ public class DeployUtils {
             }
         }
     }
-
-    //
-//    public static void copyIconsToRunner(PublishConfiguration.IconsConfigurations configurations, Path iconsDir, ClassLoader defaultIconLoader) throws IOException {
-//        boolean windowsCopied = false;
-//        boolean linuxCopied = false;
-//        boolean macCopied = false;
-//
-//        // png: 128, 32, 16
-//        // ico: 128
-//        // icns: 128
-//
-//
-////        Paths.get(configurations.pngIconPath).toFile().
-//        // Override
-//        if (configurations != null) {
-//            if (configurations.icoIconPath != null && !configurations.icoIconPath.isBlank()) {
-//                log.info("Copy ico icon from custom location {}", configurations.icoIconPath);
-//                windowsCopied = IOUtils.copyFile(Paths.get(configurations.icoIconPath), iconsDir.resolve("icon.ico"), false);
-//            }
-//            if (configurations.pngIconPath != null && !configurations.pngIconPath.isBlank()) {
-//                log.info("Copy png icon from custom location {}", configurations.pngIconPath);
-//                linuxCopied = IOUtils.copyFile(Paths.get(configurations.pngIconPath), iconsDir.resolve("icon.png"), false);
-//            }
-//            if (configurations.icnsIconPath != null && !configurations.icnsIconPath.isBlank()) {
-//                log.info("Copy icns icon from custom location {}", configurations.icnsIconPath);
-//                macCopied = IOUtils.copyFile(Paths.get(configurations.icnsIconPath), iconsDir.resolve("icon.icns"), false);
-//            }
-//        }
-//        // Defaults
-//        if (!windowsCopied) {
-//            IOUtils.copyFile(defaultIconLoader.getResourceAsStream("icon.ico"), iconsDir.resolve("icon.ico"), true);
-//        }
-//        if (!linuxCopied) {
-//            IOUtils.copyFile(defaultIconLoader.getResourceAsStream("icon.png"), iconsDir.resolve("icon.png"), true);
-//        }
-//        if (!macCopied) {
-//            IOUtils.copyFile(defaultIconLoader.getResourceAsStream("icon.icns"), iconsDir.resolve("icon.icns"), true);
-//        }
-//    }
 
     private static String getIconExtension(File potential, String[] validExtensions) {
         for (String valid : validExtensions) {

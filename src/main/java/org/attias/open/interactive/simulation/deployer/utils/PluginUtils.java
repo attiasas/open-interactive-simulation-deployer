@@ -55,7 +55,7 @@ public class PluginUtils {
     }
 
     public static Path getProjectDefaultResourcesDirPath(Project project) {
-        File file = project.file("src/main/resources");
+        File file = project.file("src" + File.separator + "main" + File.separator + "resources");
         if (file.exists() && file.isDirectory() && file.list().length > 0) {
             return file.toPath();
         }

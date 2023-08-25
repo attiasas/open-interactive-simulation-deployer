@@ -1,6 +1,8 @@
 package org.attias.open.interactive.simulation.deployer;
 
-public class OISException extends RuntimeException {
+import org.gradle.api.GradleException;
+
+public class OISException extends GradleException {
 
     public OISException(String message) {
         super(message);

@@ -7,8 +7,8 @@ import java.io.File;
 
 public class GitUtils {
 
-    // Folder needs to be created before clone
     public static void cloneRepoByTag(String repositoryURL, String branch, String destinationFolder) throws GitAPIException {
+        // Folder needs to be created before clone
         Git.cloneRepository()
                 .setURI(repositoryURL)
                 .setDirectory(new File(destinationFolder))

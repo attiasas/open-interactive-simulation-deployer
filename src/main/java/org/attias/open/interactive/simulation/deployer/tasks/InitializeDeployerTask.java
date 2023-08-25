@@ -16,7 +16,7 @@ public class InitializeDeployerTask extends DefaultTask {
     private static final Logger log = LoggerFactory.getLogger(InitializeDeployerTask.class);
 
     @TaskAction
-    public void initialize() throws IOException, GitAPIException {
+    public void initialize() throws GitAPIException {
         Project project = getProject();
         String projectPath = getPath();
         log.info("{}: Prepare and initialize run environment", projectPath);

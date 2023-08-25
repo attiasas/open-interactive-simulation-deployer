@@ -2,6 +2,7 @@ package org.attias.open.interactive.simulation.deployer;
 
 import org.attias.open.interactive.simulation.core.backend.engine.AppConfiguration;
 import org.attias.open.interactive.simulation.core.backend.utils.ProjectUtils;
+import org.attias.open.interactive.simulation.core.utils.Version;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,6 +24,8 @@ public class Constant {
     public static final Path RUNNERS_PATH = HOME_PATH.resolve("runners");
     // The version of the runners compatible with the plugin version
     public static final String RUNNER_VERSION = "0.1";
+    // Minimum Gradle version to run the plugin
+    public static final Version MIN_GRADLE_VERSION = new Version("7.0.0");
     // The default name that will be when simulation.ois is created
     public static final String DEFAULT_PROJECT_TITLE = "OIS Simulation";
     public static final Set<AppConfiguration.AppType> APP_TYPES = new HashSet<>(List.of(AppConfiguration.AppType.Desktop));
