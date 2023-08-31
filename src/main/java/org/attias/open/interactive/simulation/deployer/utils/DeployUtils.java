@@ -5,6 +5,7 @@ import org.attias.open.interactive.simulation.core.backend.engine.AppConfigurati
 import org.attias.open.interactive.simulation.core.backend.utils.ProjectUtils;
 import org.attias.open.interactive.simulation.core.utils.IOUtils;
 import org.attias.open.interactive.simulation.deployer.OISException;
+import org.gradle.api.Project;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +21,74 @@ import java.util.Set;
 public class DeployUtils {
     private static final Logger log = LoggerFactory.getLogger(DeployUtils.class);
 
-    public static String getRunnerModuleName(AppConfiguration.AppType platform) {
-        if (platform.equals(AppConfiguration.AppType.Desktop)) {
-            return  "desktop-runner";
+    public static ProjectConfiguration prepareRunnerForDeployment(Project project) throws IOException {
+        String projectPath = project.getPath();
+        log.info("{}: Validating project for deployment", projectPath);
+        DeployUtils.deployValidations(project);
+        log.info("{}: Clean runner asset directory", projectPath);
+        DeployUtils.cleanTargetAssetsDirectory(project);
+        log.info("{}: Generating runner asset directory for deployment", projectPath);
+        return DeployUtils.generateTargetAssetsDirectory(project);
+    }
+
+    public static void deployValidations(Project project) {
+        if (PluginUtils.getProjectAssetsDirectory(project).resolve(ProjectUtils.OIS).toFile().exists()) {
+            throw new OISException("Can't deploy a project with resource directory named '" + ProjectUtils.OIS + "'");
         }
-        throw new OISException("Unsupported platform type " + platform);
+    }
+
+    public static void cleanTargetAssetsDirectory(Project project) {
+        IOUtils.deleteDirectoryContent(PluginUtils.getTargetAssetsDirectory(project));
+    }
+
+    /**
+     * Runner Assets directory structure at deploy:
+     * - TargetAssetsDir
+     *  - project assets....
+     *  - .ois
+     *      - simulation.ois
+     *      - icons
+     *          - icon.ico (windows for all dims)
+     *          - icon.png (windows/linux for all dims)
+     *          - icon.icns (mac for all dims)
+     * @return configurations that was saved as 'simulation.ois'
+     * @throws IOException
+     */
+    public static ProjectConfiguration generateTargetAssetsDirectory(Project project) throws IOException {
+        Path targetAssetsDir = PluginUtils.getTargetAssetsDirectory(project);
+        String projectPath = project.getPath();
+        // Copy project resources to target
+        log.info("{}: Copy project resources to target", projectPath);
+        Path projectAssetsDir = PluginUtils.getProjectAssetsDirectory(project);
+        IOUtils.copyDirectoryContent(projectAssetsDir, targetAssetsDir);
+        // Generate OIS assets needed for deployments at target
+        log.info("{}: Generate OIS assets needed for deployments at target", projectPath);
+        Path oisAssetsDir = targetAssetsDir.resolve(ProjectUtils.OIS);
+        IOUtils.createDirIfNotExists(oisAssetsDir,true);
+        // Create project configurations
+        log.info("{}: Create project configurations", projectPath);
+        ProjectConfiguration configuration = PluginUtils.getProjectConfiguration(project);
+        IOUtils.writeAsJsonFile(configuration, oisAssetsDir.resolve(ProjectConfiguration.DEFAULT_FILE_NAME));
+        // Create icons assets
+        log.info("{}: Create icons assets", projectPath);
+        Path iconsDir = oisAssetsDir.resolve("icons");
+        IOUtils.createDirIfNotExists(iconsDir, true);
+        ClassLoader defaultIconsLoader = Thread.currentThread().getContextClassLoader();
+        DeployUtils.copyIconsToRunner(configuration, iconsDir, defaultIconsLoader);
+
+        return configuration;
+    }
+
+    public static String getRunnerModuleName(AppConfiguration.AppType platform) {
+        switch (platform) {
+            case Desktop -> {
+                return "desktop-runner";
+            }
+            case Android -> {
+                return "android-runner";
+            }
+            default -> throw new OISException("Unsupported platform type " + platform);
+        }
     }
 
     public static String getOsName() {

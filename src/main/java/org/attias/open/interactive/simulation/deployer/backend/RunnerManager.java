@@ -38,11 +38,11 @@ public class RunnerManager {
         return dir.exists() && dir.isDirectory() && dir.list().length > 0;
     }
 
-    public static void executeRunOnPlatform(Project project, AppConfiguration.AppType platform) {
+    public static void executeRunOnPlatform(Project project, Map<String, String> envVars, AppConfiguration.AppType platform) {
         try {
             GradleUtils.executeGradleCommand(
                     PluginUtils.getRunnerDirectory(project),
-                    getRunningEnvVariables(project),
+                    envVars,
                     log,
                     GradleUtils.getRunningProjectGradleCommands(platform)
             );
@@ -57,6 +57,10 @@ public class RunnerManager {
         env.put(AppConfiguration.ENV_PROJECT_JAR, PluginUtils.getProjectJar(project).getAbsolutePath());
         env.put(AppConfiguration.ENV_PROJECT_ASSETS_DIR, PluginUtils.getProjectAssetsDirectory(project).toString());
         env.put(ProjectConfiguration.ENV_PROJECT_CONFIG_PATH, PluginUtils.getProjectConfigurationPath(project).toString());
+        Path androidSdkPath = ExtensionUtils.getOverrideAndroidSdkPath(project);
+        if (androidSdkPath != null) {
+            env.put(AppConfiguration.ENV_ANDROID_SDK_PATH, androidSdkPath.toString());
+        }
         log.info("Running Env: {}", env);
         // Add other existing
         env.putAll(System.getenv());

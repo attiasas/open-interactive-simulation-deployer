@@ -7,13 +7,17 @@ group 'org.attias.open.interactive.simulation'
 version '1.0-SNAPSHOT'
 var pluginDescription = "Plugin that can run and deploy simulation made by OpenSimualtion"
 
+ext {
+    coreVersion = '0.1'
+}
+
 repositories {
     mavenCentral()
     mavenLocal()
 }
 
 dependencies {
-    implementation group: 'org.attias.open.interactive.simulation', name: 'open-interactive-simulation-core', version: '0.1'
+    api "org.attias.open.interactive.simulation:open-interactive-simulation-core:$coreVersion"
 
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.0.202305301015-r'
 

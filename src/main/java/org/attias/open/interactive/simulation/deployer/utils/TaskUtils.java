@@ -96,6 +96,21 @@ public class TaskUtils {
         ).configure(runDesktopSimulationTask -> runDesktopSimulationTask.dependsOn(initTask));
     }
 
+    public static void addRunAndroidTask(Project project, TaskProvider<InitializeDeployerTask> initTask) {
+        try {
+            project.getTasks().named(Constant.RUN_ANDROID_TASK_NAME);
+            return;
+        } catch (UnknownTaskException e) {
+            log.debug("Registering '{}' task to the project {}", Constant.RUN_ANDROID_TASK_NAME, project.getPath());
+        }
+        registerTaskInProject(
+                Constant.RUN_ANDROID_TASK_NAME,
+                RunAndroidSimulationTask.class,
+                Constant.RUN_ANDROID_TASK_DESCRIPTION,
+                project
+        ).configure(runAndroidSimulationTask -> runAndroidSimulationTask.dependsOn(initTask));
+    }
+
     public static void addDeployTask(Project project, TaskProvider<InitializeDeployerTask> initTask) {
         try {
             project.getTasks().named(Constant.DEPLOY_TASK_NAME);

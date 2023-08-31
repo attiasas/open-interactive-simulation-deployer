@@ -135,7 +135,7 @@ For instance:
     "Green" : "org.example.GreenState"
   },
   "publish" : {
-    "platforms" : [ "Desktop" ]
+    "platforms" : [ "Desktop", "Android" ]
   }
 }
 ```
@@ -160,13 +160,17 @@ This can be achieved by specifying the `oisDeployer` extension within your `buil
 ```groovy
 oisDeployer {
     // Instead of resolving the runner based on its version in simulation.ois, 
-    // run the runner project from this directory.
+    // Run the runner project from this directory.
     runnerPath = 'path-to-dir-of-specific-runner'
     // Instead of retrieving the project configurations from the `simulation.ois` file in the project root directory,
-    // obtain project configurations from this file.
+    // Obtain project configurations from this file.
     configPath = 'path-to-your-simulation-config-file'
-    // Rather than resolving the assets directory from your project resources, resolve it from this path.
+    // Rather than resolving the assets directory from your project resources
+    // Resolve it from this path.
     assetsPath = 'path-to-your-resources-dir'
+    // Rather than resolving the Android Sdk location from the environment variable 'ANDROID_HOME'
+    // Resolve it from this path.
+    androidSdkPath = 'path-to-android-sdk-dir'
 }
 ```
 
@@ -193,10 +197,34 @@ for insights into leveraging the core library effectively.
 
 ### 👀 Running Your Project
 
-After applying the [configurations](#-project-configurations), you can run your project locally on your `Desktop` by executing:
+To plugin will create running tasks to debug your project for each value you input at `publish.platforms` attribute in the [configurations](#-project-configurations).
+
+<details>
+<summary>Desktop Platform</summary>
+
+---
+After applying the configurations, you can run your project locally on your `Desktop` by executing:
    ```bash
    gradlew runDesktop
    ```
+---
+</details>
+
+<details>
+<summary>Android Platform</summary>
+
+---
+After applying the configurations, you can run your project on a virtual/physical `Android` device by executing:
+1. Make sure there is an active device connected.
+2. Some changes require to uninstall the application before rerunning.
+3. Run the following gradle command:
+   ```bash
+   gradlew runAndroid
+   ```
+
+---
+</details>
+
 
 ### 🚀 Distributing Your Project
 
@@ -206,13 +234,17 @@ These files are essential for running your project on the designated platforms. 
    gradlew deployProject
    ```
 
-> **Distributing on the Desktop Platform:**
-> 
-> Note that the generated zip files are specific to the platform they were built on. 
-> For instance, generate the distribution task on a Windows machine for Windows distribution and on a Linux machine for Linux distribution.
-
 The artifacts intended for distribution will be created within your project's `build` directory.
 Inside this directory, you'll find a folder named `OIS` containing zip files tailored for each platform configuration specified in your project's configuration file.
+
+> **Publishing to Desktop Platform:**
+>
+> Note that the generated zip files are specific to the platform they were built on.
+> For instance, generate the distribution task on a Windows machine for Windows distribution and on a Linux machine for Linux distribution.
+
+> **Publishing to Android Platform:**
+> 
+> Note that the generated apk is unsigned and should be signed before distribution.
 
 ---
 ## 🐞 Reporting Issues
@@ -222,7 +254,7 @@ we recommend using the `-d` option when running Gradle for detailed debug inform
 
 If you face issues with running or deploying your project, start fresh by cleaning the runners:
 ```bash
-    gradlew cleanRunners
+gradlew cleanRunners
 ```
 
 To contribute to the library's improvement, 

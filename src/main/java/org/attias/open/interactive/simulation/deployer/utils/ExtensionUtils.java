@@ -55,6 +55,24 @@ public class ExtensionUtils {
             return null;
         }
         File assetsDir = new File(assetsPath);
-        return assetsDir.exists() && assetsDir.isDirectory() && assetsDir.list().length > 0 ? assetsDir.toPath() : null;
+        if (!assetsDir.exists() || !assetsDir.isDirectory()) {
+            return null;
+        }
+        String[] content = assetsDir.list();
+        return content != null && content.length > 0 ? assetsDir.toPath() : null;
+    }
+
+    public static Path getOverrideAndroidSdkPath(Project project) {
+        SimulationDeployerExtension extension = getProjectExtension(project);
+        String sdkPath = extension.getAndroidSdkPath();
+        if (sdkPath == null) {
+            return null;
+        }
+        File sdkDir = new File(sdkPath);
+        if (!sdkDir.exists() || !sdkDir.isDirectory()) {
+            return null;
+        }
+        String[] content = sdkDir.list();
+        return content != null && content.length > 0 ? sdkDir.toPath() : null;
     }
 }

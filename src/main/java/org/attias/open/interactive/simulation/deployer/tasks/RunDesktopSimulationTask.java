@@ -13,8 +13,8 @@ public class RunDesktopSimulationTask extends DefaultTask {
     private static final Logger log = LoggerFactory.getLogger(RunDesktopSimulationTask.class);
 
     @TaskAction
-    public void runSimulation() throws IOException {
+    public void runSimulation() {
         log.info("{} Running desktop simulation", getPath());
-        RunnerManager.executeRunOnPlatform(getProject(), AppConfiguration.AppType.Desktop);
+        RunnerManager.executeRunOnPlatform(getProject(), RunnerManager.getRunningEnvVariables(getProject()), AppConfiguration.AppType.Desktop);
     }
 }
