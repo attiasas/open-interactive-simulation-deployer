@@ -17,9 +17,10 @@ public class Constant {
 
     // The group of the tasks added by the plugin
     public static final String GROUP_NAME = ProjectUtils.OIS;
-
+    // the name of the plugin directory at home user
+    public static final String OIS_DIRECTORY_NAME = "." + ProjectUtils.OIS;
     // The plugin directory in the user home
-    public static final Path HOME_PATH = Paths.get(System.getProperty("user.home"), ProjectUtils.OIS_DIRECTORY_NAME);
+    public static final Path HOME_PATH = Paths.get(System.getProperty("user.home"), OIS_DIRECTORY_NAME);
     // The directory that cache the runners
     public static final Path RUNNERS_PATH = HOME_PATH.resolve("runners");
     // The version of the runners compatible with the plugin version

@@ -30,7 +30,7 @@ public class DeployProjectTask extends DefaultTask {
         String projectPath = getPath();
         log.info("{}: Starting to deploy project to all configured platforms", projectPath);
         // Phase 1: Prepare for deployment
-        ProjectConfiguration configuration = DeployUtils.prepareRunnerForDeployment(project);
+        ProjectConfiguration configuration = DeployUtils.prepareRunnersForDeployment(project);
         Path targetLibDirectory = PluginUtils.getProjectOISLibsPath(project);
         if (IOUtils.createDirIfNotExists(targetLibDirectory, true)) {
             log.info("{}: Created OIS directory for the deployed artifacts at {}", projectPath, targetLibDirectory);

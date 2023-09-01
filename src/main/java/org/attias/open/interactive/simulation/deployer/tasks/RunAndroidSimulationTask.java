@@ -18,7 +18,7 @@ public class RunAndroidSimulationTask extends DefaultTask {
     public void runSimulation() throws IOException {
         // Running an app on android is similar to deploying the project.
         // We need to prepare everything so the runner can be used in the android device
-        DeployUtils.prepareRunnerForDeployment(getProject());
+        DeployUtils.prepareRunnersForDeployment(getProject());
         log.info("{} Running android simulation", getPath());
         RunnerManager.executeRunOnPlatform(getProject(), RunnerManager.getDeployingEnvVariables(getProject()), AppConfiguration.AppType.Android);
     }
