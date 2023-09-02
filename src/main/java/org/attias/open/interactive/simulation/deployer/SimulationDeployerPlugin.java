@@ -9,7 +9,6 @@ import org.attias.open.interactive.simulation.deployer.utils.ExtensionUtils;
 import org.attias.open.interactive.simulation.deployer.utils.GradleUtils;
 import org.attias.open.interactive.simulation.deployer.utils.PluginUtils;
 import org.attias.open.interactive.simulation.deployer.utils.TaskUtils;
-import org.gradle.api.GradleException;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;

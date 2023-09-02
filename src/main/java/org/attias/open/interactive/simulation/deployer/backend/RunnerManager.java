@@ -3,6 +3,7 @@ package org.attias.open.interactive.simulation.deployer.backend;
 import org.attias.open.interactive.simulation.core.backend.engine.AppConfiguration;
 import org.attias.open.interactive.simulation.core.backend.config.ProjectConfiguration;
 import org.attias.open.interactive.simulation.core.utils.IOUtils;
+import org.attias.open.interactive.simulation.core.utils.JsonUtils;
 import org.attias.open.interactive.simulation.deployer.Constant;
 import org.attias.open.interactive.simulation.deployer.utils.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -38,51 +39,67 @@ public class RunnerManager {
         return dir.exists() && dir.isDirectory() && dir.list().length > 0;
     }
 
-    public static void executeRunOnPlatform(Project project, Map<String, String> envVars, AppConfiguration.AppType platform) {
+    public static Map<String, String> getRunningEnvVariables(Project project) {
+        Map<String, String> env = new HashMap<>();
+        // Add Runners expected environment variables
+        env.put(AppConfiguration.ENV_DEBUG_MODE, "true");
+        env.put(ProjectConfiguration.ENV_PROJECT_CONFIG_PATH, PluginUtils.getProjectConfigurationPath(project).toString());
+        env.put(AppConfiguration.ENV_PROJECT_JAR, PluginUtils.getProjectJar(project).getAbsolutePath());
+        env.put(AppConfiguration.ENV_PROJECT_ASSETS_DIR, PluginUtils.getProjectAssetsDirectory(project).toString());
+        Path androidSdkPath = ExtensionUtils.getOverrideAndroidSdkPath(project);
+        if (androidSdkPath != null) {
+            env.put(AppConfiguration.ENV_ANDROID_SDK_PATH, androidSdkPath.toString());
+        }
+        return env;
+    }
+
+    public static Map<String, String> getDeployingEnvVariables(Project project) throws IOException {
+        Map<String, String> env = new HashMap<>();
+        env.put(AppConfiguration.ENV_PROJECT_NAME, PluginUtils.getProjectPublishName(project));
+        env.put(AppConfiguration.ENV_PROJECT_GROUP, project.getGroup().toString());
+        env.put(AppConfiguration.ENV_PROJECT_VERSION, project.getVersion().toString());
+        env.put(AppConfiguration.ENV_PROJECT_VERSION_NUMBER, PluginUtils.getProjectPublishNumber(project));
+        env.put(AppConfiguration.ENV_PROJECT_JAR, PluginUtils.getProjectJar(project).getAbsolutePath());
+        return env;
+    }
+
+    public static void executeRunOnPlatform(Project project, Map<String, String> envVars, AppConfiguration.AppType platform, boolean oneByOne) throws IOException {
+        log.info("Running Env:\n{}", JsonUtils.toJson(envVars));
+        envVars.putAll(System.getenv());
         try {
-            GradleUtils.executeGradleCommand(
-                    PluginUtils.getRunnerDirectory(project),
-                    envVars,
-                    log,
-                    GradleUtils.getRunningProjectGradleCommands(platform)
-            );
+            String[] commands = GradleUtils.getRunningProjectGradleCommands(platform);
+            if (!oneByOne) {
+                GradleUtils.executeGradleCommand(
+                        PluginUtils.getRunnerDirectory(project),
+                        envVars,
+                        log,
+                        commands
+                );
+                return;
+            }
+            for (String command : commands) {
+                GradleUtils.executeGradleCommand(
+                        PluginUtils.getRunnerDirectory(project),
+                        envVars,
+                        log,
+                        command
+                );
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static Map<String, String> getRunningEnvVariables(Project project) {
-        Map<String, String> env = new HashMap<>();
-        // Add Runners expected environment variables
-        env.put(AppConfiguration.ENV_PROJECT_JAR, PluginUtils.getProjectJar(project).getAbsolutePath());
-        env.put(AppConfiguration.ENV_PROJECT_ASSETS_DIR, PluginUtils.getProjectAssetsDirectory(project).toString());
-        env.put(ProjectConfiguration.ENV_PROJECT_CONFIG_PATH, PluginUtils.getProjectConfigurationPath(project).toString());
-        Path androidSdkPath = ExtensionUtils.getOverrideAndroidSdkPath(project);
-        if (androidSdkPath != null) {
-            env.put(AppConfiguration.ENV_ANDROID_SDK_PATH, androidSdkPath.toString());
-        }
-        log.info("Running Env: {}", env);
+    public static void deployProject(Project project, AppConfiguration.AppType platform) throws IOException {
+        Map<String, String> env = getDeployingEnvVariables(project);
+        log.info("Deploying Env:\n{}", JsonUtils.toJson(env));
         // Add other existing
         env.putAll(System.getenv());
-        return env;
-    }
-
-    public static void deployProject(Project project, AppConfiguration.AppType platform) throws IOException {
         GradleUtils.executeGradleCommand(
                 PluginUtils.getRunnerDirectory(project),
-                getDeployingEnvVariables(project),
+                env,
                 log,
                 GradleUtils.getDeployingProjectGradleCommands(platform)
         );
-    }
-
-    public static Map<String, String> getDeployingEnvVariables(Project project) throws IOException {
-        Map<String, String> env = new HashMap<>();
-        env.put(AppConfiguration.ENV_PROJECT_JAR, PluginUtils.getProjectJar(project).getAbsolutePath());
-        env.put(AppConfiguration.ENV_PROJECT_NAME, PluginUtils.getProjectPublishName(project));
-        log.info("Deploying Env: {}", env);
-        // Add other existing
-        env.putAll(System.getenv());
-        return env;
     }
 }

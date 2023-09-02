@@ -4,19 +4,25 @@ import org.attias.open.interactive.simulation.core.backend.config.ProjectConfigu
 import org.attias.open.interactive.simulation.core.backend.engine.AppConfiguration;
 import org.attias.open.interactive.simulation.core.backend.utils.ProjectUtils;
 import org.attias.open.interactive.simulation.core.utils.IOUtils;
+import org.attias.open.interactive.simulation.core.utils.JsonUtils;
+import org.attias.open.interactive.simulation.core.utils.XmlUtils;
 import org.attias.open.interactive.simulation.deployer.OISException;
 import org.attias.open.interactive.simulation.deployer.backend.IconManager;
 import org.gradle.api.Project;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class DeployUtils {
     private static final Logger log = LoggerFactory.getLogger(DeployUtils.class);
 
-    public static ProjectConfiguration prepareRunnersForDeployment(Project project) throws IOException {
+    public static ProjectConfiguration prepareRunnersForDeployment(Project project) throws IOException, ParserConfigurationException, SAXException, TransformerException {
         String projectPath = project.getPath();
         log.info("{}: Validating project for deployment", projectPath);
         deployValidations(project);
@@ -32,15 +38,21 @@ public class DeployUtils {
         return configuration;
     }
 
-    private static void prepareAndroidResourcesDirectory(Project project, ProjectConfiguration configuration) throws IOException {
+    private static void prepareAndroidResourcesDirectory(Project project, ProjectConfiguration configuration) throws IOException, ParserConfigurationException, SAXException, TransformerException {
         String projectPath = project.getPath();
         String androidModuleName = getRunnerModuleName(AppConfiguration.AppType.Android);
         Path androidResourcesDir = PluginUtils.getRunnerDirectory(project).resolve(androidModuleName).resolve("res");
-        // Android Resources preparations
+
         log.info("{}: Clean Android icons resources directory", projectPath);
         IconManager.cleanAndroidIconsResourceDir(androidResourcesDir);
-        log.info("{}: Generating Android icons", project.getPath());
+        log.info("{}: Generating Android icons", projectPath);
         IconManager.generateTargetAndroidIcons(configuration, androidResourcesDir);
+
+        log.info("{}: Update App name", projectPath);
+        Path appNameFile = androidResourcesDir.resolve("values").resolve("strings.xml");
+        Document doc = XmlUtils.readXml(appNameFile);
+        doc.getDocumentElement().getElementsByTagName("string").item(0).setTextContent(PluginUtils.getProjectPublishName(project));
+        XmlUtils.saveXml(doc, appNameFile);
     }
 
     public static void deployValidations(Project project) {
@@ -71,7 +83,7 @@ public class DeployUtils {
         IOUtils.createDirIfNotExists(oisAssetsDir,true);
         // Create project configurations
         log.info("{}: Transfer project configurations", projectPath);
-        IOUtils.writeAsJsonFile(configuration, oisAssetsDir.resolve(ProjectConfiguration.DEFAULT_FILE_NAME));
+        JsonUtils.writeAsJsonFile(configuration, oisAssetsDir.resolve(ProjectConfiguration.DEFAULT_FILE_NAME));
         if (configuration.publish.platforms.contains(AppConfiguration.AppType.Desktop)) {
             // Create icons assets
             log.info("{}: Create icons assets", projectPath);

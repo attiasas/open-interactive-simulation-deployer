@@ -12,7 +12,10 @@ import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
@@ -25,7 +28,7 @@ public class DeployProjectTask extends DefaultTask {
     private static final Logger log = LoggerFactory.getLogger(DeployProjectTask.class);
 
     @TaskAction
-    public void deployProject() throws IOException {
+    public void deployProject() throws IOException, ParserConfigurationException, SAXException, TransformerException {
         Project project = getProject();
         String projectPath = getPath();
         log.info("{}: Starting to deploy project to all configured platforms", projectPath);
@@ -47,7 +50,7 @@ public class DeployProjectTask extends DefaultTask {
      * 1. Deploy for platform
      * 2. Zip generated artifacts
      * 3. Copy to OIS lib directory
-     * @param platform
+     * @param platform - runner platform
      * @throws IOException
      */
     private void deployProjectWithRunner(AppConfiguration.AppType platform) throws IOException {

@@ -16,31 +16,46 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Manage all the icons of the project for running and deploying
+ */
 public class IconManager {
     private static final Logger log = LoggerFactory.getLogger(IconManager.class);
+    // Loader for icons from the plugin resource directory
     private static ClassLoader defaultIconsLoader = Thread.currentThread().getContextClassLoader();
+    // All the needed icon extensions for desktop runner
+    private static final Set<ProjectUtils.IconExtension> desktopExtensions = new HashSet<>(List.of(ProjectUtils.IconExtension.PNG, ProjectUtils.IconExtension.ICO, ProjectUtils.IconExtension.ICNS));
+    // All the needed icons for android runner
+    private static final Map<ProjectUtils.IconExtension,List<Map.Entry<Integer, String[]>>> androidIconLocations = getAndroidIconLocations();
 
-    private static final Map<Integer,String> androidIconLocations = getAndroidDestinationMapperValues();
+    private static Map<ProjectUtils.IconExtension,List<Map.Entry<Integer, String[]>>> getAndroidIconLocations() {
+        Map<ProjectUtils.IconExtension,List<Map.Entry<Integer, String[]>>> map = new Hashtable<>();
+        List<Map.Entry<Integer, String[]>> pngMap = new ArrayList<>();
+        pngMap.add(Map.entry(48, new String[]{"drawable-mdpi", "ic_launcher.png"}));
+        pngMap.add(Map.entry(72, new String[]{"drawable-hdpi", "ic_launcher.png"}));
+        pngMap.add(Map.entry(96, new String[]{"drawable-xhdpi", "ic_launcher.png"}));
+        pngMap.add(Map.entry(144, new String[]{"drawable-xxhdpi", "ic_launcher.png"}));
+        pngMap.add(Map.entry(192, new String[]{"drawable-xxxhdpi", "ic_launcher.png"}));
+        map.put(ProjectUtils.IconExtension.PNG, pngMap);
 
-    private static final Map<Integer,String> getAndroidDestinationMapperValues() {
-        Map<Integer, String> map = new Hashtable<>();
-        map.put(48,"drawable-mdpi");
-        map.put(72,"drawable-hdpi");
-        map.put(96,"drawable-xhdpi");
-        map.put(144,"drawable-xxhdpi");
-        map.put(192,"drawable-xxxhdpi");
-        // 108x108 - in xml format (anydpi)
+        List<Map.Entry<Integer, String[]>> xmlMap = new ArrayList<>();
+        xmlMap.add(Map.entry(108, new String[]{"drawable-anydpi-v26", "ic_launcher_foreground.xml"}));
+        map.put(ProjectUtils.IconExtension.XML, xmlMap);
         return map;
     }
 
     public static void cleanAndroidIconsResourceDir(Path androidResourcesDir) {
-        for (String subDir : androidIconLocations.values()) {
-            IOUtils.deleteDirectoryContent(androidResourcesDir.resolve(subDir));
+        for (Map.Entry<Integer, String[]> iconDir : androidIconLocations.get(ProjectUtils.IconExtension.PNG)) {
+            IOUtils.deleteDirectoryContent(androidResourcesDir.resolve(iconDir.getValue()[0]));
+        }
+        File xmlIcon = Paths.get(androidResourcesDir.toString(), androidIconLocations.get(ProjectUtils.IconExtension.XML).get(0).getValue()).toFile();
+        if (xmlIcon.exists()) {
+            xmlIcon.delete();
         }
     }
 
     public static void generateTargetAndroidIcons(ProjectConfiguration configuration, Path androidResourcesDir) throws IOException {
-        List<Map.Entry<Integer,String>> neededIcons = new ArrayList<>(androidIconLocations.entrySet());
+        Map<ProjectUtils.IconExtension,List<Map.Entry<Integer, String[]>>> neededIcons = getAndroidIconLocations();
         // Custom & Generate
         if (configuration.publish.iconsDir != null) {
             File customDir = Paths.get(configuration.publish.iconsDir).toFile();
@@ -49,44 +64,52 @@ public class IconManager {
             }
         }
         // Default
-        for (Map.Entry<Integer,String> neededIconInfo : neededIcons) {
-            Path target = androidResourcesDir.resolve(neededIconInfo.getValue()).resolve("ic_launcher.png");
-            log.warn("Using default android {}x{} icon", neededIconInfo.getKey(), neededIconInfo.getKey());
-            IOUtils.copyFile(defaultIconsLoader.getResourceAsStream("icons/" + neededIconInfo.getKey() + target.getFileName()), target, true);
+        for (Map.Entry<ProjectUtils.IconExtension,List<Map.Entry<Integer, String[]>>> neededExtensionIcons : neededIcons.entrySet()) {
+            ProjectUtils.IconExtension extension = neededExtensionIcons.getKey();
+            for (Map.Entry<Integer,String[]> neededIconInfo : neededExtensionIcons.getValue()) {
+                Path target = Paths.get(androidResourcesDir.toString(), neededIconInfo.getValue());
+                log.warn("Using default android {}x{} icon{}", neededIconInfo.getKey(), neededIconInfo.getKey(), extension.value);
+                IOUtils.copyFile(defaultIconsLoader.getResourceAsStream("icons/" + neededIconInfo.getKey() + target.getFileName()), target, true);
+            }
         }
     }
 
-    public static void handleCustomAndroidIcons(ProjectConfiguration configuration, Path androidResourcesDir, List<Map.Entry<Integer,String>> neededIcons) throws IOException {
+    public static void handleCustomAndroidIcons(ProjectConfiguration configuration, Path androidResourcesDir, Map<ProjectUtils.IconExtension,List<Map.Entry<Integer, String[]>>> neededIcons) throws IOException {
         Path customDir = Paths.get(configuration.publish.iconsDir);
         Path biggestCustomPngIcon = null;
         int biggestPngDim = -1;
         // Custom
-        for (int i = 0; i < neededIcons.size(); i++) {
-            Map.Entry<Integer,String> neededIconInfo = neededIcons.get(i);
-            Path target = androidResourcesDir.resolve(neededIconInfo.getValue()).resolve("ic_launcher.png");
-            Path copied = searchCustomIconAndCopy(customDir, ProjectUtils.IconExtension.PNG, neededIconInfo.getKey(), target);
-            if (copied != null) {
-                log.info("Using custom android png icon for size {}x{} from {}", neededIconInfo.getKey(), neededIconInfo.getKey(), copied);
-                neededIcons.remove(i);
-                i--;
-                if (neededIconInfo.getKey() > biggestPngDim) {
-                    biggestPngDim = neededIconInfo.getKey();
-                    biggestCustomPngIcon = copied;
+        for (Map.Entry<ProjectUtils.IconExtension,List<Map.Entry<Integer, String[]>>> neededExtensionIcons : neededIcons.entrySet()) {
+            ProjectUtils.IconExtension extension = neededExtensionIcons.getKey();
+            for (int i = 0; i < neededExtensionIcons.getValue().size(); i++) {
+                Map.Entry<Integer,String[]> neededIconInfo = neededExtensionIcons.getValue().get(i);
+                Path target = Paths.get(androidResourcesDir.toString(), neededIconInfo.getValue());
+                Path copied = searchCustomIconAndCopy(customDir, extension, neededIconInfo.getKey(), target);
+                if (copied != null) {
+                    log.info("Using custom android icon{} for size {}x{} from {}", extension.value, neededIconInfo.getKey(), neededIconInfo.getKey(), copied);
+                    neededExtensionIcons.getValue().remove(i);
+                    i--;
+                    if (ProjectUtils.IconExtension.PNG.equals(extension) && neededIconInfo.getKey() > biggestPngDim) {
+                        biggestPngDim = neededIconInfo.getKey();
+                        biggestCustomPngIcon = copied;
+                    }
                 }
             }
         }
+        
         // Generate
         if (configuration.publish.generateMissingIcons != null && configuration.publish.generateMissingIcons) {
             if (biggestPngDim <= 0) {
                 log.warn("Can't find any custom valid icon to generate missing icons in the given Icons directory {}", customDir);
                 return;
             }
-            for (int i = 0; i < neededIcons.size(); i++) {
-                Map.Entry<Integer,String> neededIconInfo = neededIcons.get(i);
-                Path target = androidResourcesDir.resolve(neededIconInfo.getValue()).resolve("ic_launcher.png");
+            List<Map.Entry<Integer, String[]>> neededPngIcons = neededIcons.get(ProjectUtils.IconExtension.PNG);
+            for (int i = 0; i < neededPngIcons.size(); i++) {
+                Map.Entry<Integer,String[]> neededIconInfo = neededPngIcons.get(i);
+                Path target = Paths.get(androidResourcesDir.toString(), neededIconInfo.getValue());
                 log.info("Generating custom android png icon to size {}x{}", neededIconInfo.getKey(), neededIconInfo.getKey());
                 copyAndResizeIcon(biggestCustomPngIcon, target, neededIconInfo.getKey());
-                neededIcons.remove(i);
+                neededPngIcons.remove(i);
                 i--;
             }
         }
@@ -95,7 +118,7 @@ public class IconManager {
     public static void generateTargetAssetsIcons(ProjectConfiguration configuration, Path iconsTargetDir) throws IOException {
         // Prepare needed combinations
         List<Map.Entry<Integer,ProjectUtils.IconExtension>> neededIcons = new ArrayList<>();
-        for (ProjectUtils.IconExtension extension : ProjectUtils.IconExtension.values()) {
+        for (ProjectUtils.IconExtension extension : desktopExtensions) {
             for (int dim : ProjectUtils.DESKTOP_ICON_SIZES) {
                 neededIcons.add(Map.entry(dim,extension));
             }
@@ -163,7 +186,7 @@ public class IconManager {
             if (neededExtension != getIconExtension(icon)) {
                 continue;
             }
-            if (neededDim != getImageDim(icon)) {
+            if (!neededExtension.equals(ProjectUtils.IconExtension.XML) && neededDim != getImageDim(icon)) {
                 continue;
             }
             if (IOUtils.copyFile(Paths.get(icon.getAbsolutePath()), target, false)) {
@@ -171,19 +194,6 @@ public class IconManager {
             }
         }
         return null;
-    }
-
-    private static boolean isValidImage(Path sourceImage) {
-        File source = sourceImage.toFile();
-        if (!source.exists() || !source.isFile()) {
-            return false;
-        }
-        ProjectUtils.IconExtension extension = getIconExtension(source);
-        return extension != null && getImageDim(source) > 0;
-    }
-
-    private static boolean isValidPngImage(Path sourceImage) {
-        return isValidImage(sourceImage) && ProjectUtils.IconExtension.PNG.equals(getIconExtension(sourceImage.toFile()));
     }
 
     private static ProjectUtils.IconExtension getIconExtension(File potential) {
