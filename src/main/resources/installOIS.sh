@@ -1,5 +1,38 @@
 #!/bin/bash
 
+# Initialize default values
+DEPLOYER_TAG="master"
+CORE_TAG=""
+
+# Function to display usage information
+usage() {
+    echo "Usage: $0 [-d <deployer_tag>] [-c <core_tag>] [-h]"
+    echo "Options:"
+    echo "  -d <deployer_tag>    Specify the deployer tag (default: master)"
+    echo "  -c <core_tag>        Specify the core tag (optional, determined automatically if not specified)"
+    echo "  -h                   Display this help message"
+    exit 1
+}
+
+# Parse command-line options
+while getopts "d:c:h" opt; do
+    case "$opt" in
+    d)
+        DEPLOYER_TAG="$OPTARG"
+        ;;
+    c)
+        CORE_TAG="$OPTARG"
+        ;;
+    h)
+        usage
+        ;;
+    \?)
+        echo "Invalid option: -$OPTARG" >&2
+        usage
+        ;;
+    esac
+done
+
 # Determine the operating system
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     OS="linux"
@@ -15,22 +48,14 @@ else
     OS="unknown"
 fi
 
-# Set the base directory for cloning
-base_dir="$HOME/.ois"
-mkdir -p "$base_dir"
-
-# Define the tags for cloning
-#CORE_TAG="master"
-DEPLOYER_TAG="${1:-master}"
-
 # Function to check if directory exists and is not empty
 directory_exists_and_not_empty() {
     dir_path=$1
 
     if [ -d "$dir_path" ] && [ -n "$(ls -A "$dir_path")" ]; then
-        return 0  # Directory exists and is not empty
+        return 0  # Directory doesn't exist or is empty
     else
-        return 1  # Directory doesn't exist or is empty
+        return 1  # Directory exists and is not empty
     fi
 }
 
@@ -58,7 +83,7 @@ publish_repository() {
     cd "$repo_dir"
 
     # Publish the repository to Maven Local
-    echo "publishing to mavenLocal $repo_dir."
+    echo "publishing $repo_dir to mavenLocal."
     if [[ "$OS" == "windows" ]]; then
         ./gradlew.bat publishToMavenLocal
     else
@@ -83,29 +108,42 @@ clone_and_publish() {
     publish_repository "$repo_dir"
 }
 
-# Clone the deployer repository
-clone_repository https://github.com/attiasas/open-interactive-simulation-deployer.git $DEPLOYER_TAG
+# Set the base directory for cloning
+base_dir="$HOME/.ois"
+mkdir -p "$base_dir"
 
-# Determine the core tag from build.gradle
-DEPLOYER_DIR="$base_dir/$(basename https://github.com/attiasas/open-interactive-simulation-deployer.git .git)-$DEPLOYER_TAG"
-DEPLOYER_BUILD_GRADLE="$DEPLOYER_DIR/build.gradle"
+if [ -z "$CORE_TAG" ]; then
+  # Clone the deployer repository
+  clone_repository https://github.com/attiasas/open-interactive-simulation-deployer.git $DEPLOYER_TAG
 
-if [ -f "$DEPLOYER_BUILD_GRADLE" ]; then
-    core_version_line=$(grep "coreVersion" "$DEPLOYER_BUILD_GRADLE")
-    if [[ "$core_version_line" =~ coreVersion\ *=\ *[\'\"]([0-9]+\.[0-9]+(\.[0-9]+)*(-[a-zA-Z0-9]+)*)[\'\"] ]]; then
-        CORE_TAG="${BASH_REMATCH[1]}"
-        echo "Found coreVersion: $CORE_TAG"
+  echo "Determine the core tag from deployer build.gradle."
+  DEPLOYER_DIR="$base_dir/$(basename https://github.com/attiasas/open-interactive-simulation-deployer.git .git)-$DEPLOYER_TAG"
+  DEPLOYER_BUILD_GRADLE="$DEPLOYER_DIR/build.gradle"
 
-        # Clone and publish the core repository
-        clone_and_publish https://github.com/attiasas/open-interactive-simulation-core.git $CORE_TAG
+  if [ -f "$DEPLOYER_BUILD_GRADLE" ]; then
+      core_version_line=$(grep "coreVersion" "$DEPLOYER_BUILD_GRADLE")
+      if [[ "$core_version_line" =~ coreVersion\ *=\ *[\'\"]([0-9]+\.[0-9]+(\.[0-9]+)*(-[a-zA-Z0-9]+)*)[\'\"] ]]; then
+          CORE_TAG="${BASH_REMATCH[1]}"
+          echo "Found coreVersion: $CORE_TAG"
 
-        # Publish the deployer repository
-        publish_repository "$DEPLOYER_DIR"
-    else
-        echo "coreVersion not found in $DEPLOYER_BUILD_GRADLE. Exiting."
-        exit 1
-    fi
+          # Clone and publish the core repository
+          clone_and_publish https://github.com/attiasas/open-interactive-simulation-core.git $CORE_TAG
+
+          # Publish the deployer repository
+          publish_repository "$DEPLOYER_DIR"
+      else
+          echo "coreVersion not found in $DEPLOYER_BUILD_GRADLE. Exiting."
+          exit 1
+      fi
+  else
+      echo "$DEPLOYER_BUILD_GRADLE not found. Unable to determine coreVersion. Exiting."
+      exit 1
+  fi
 else
-    echo "$DEPLOYER_BUILD_GRADLE not found. Unable to determine coreVersion. Exiting."
-    exit 1
+  echo "Installing core library $CORE_TAG and deployer plugin $DEPLOYER_TAG."
+  # Clone and publish the core repository
+  clone_and_publish https://github.com/attiasas/open-interactive-simulation-core.git $CORE_TAG
+  # Clone and publish the deployer repository
+  clone_and_publish https://github.com/attiasas/open-interactive-simulation-deployer.git $DEPLOYER_TAG
 fi
+echo "core library $CORE_TAG and deployer plugin $DEPLOYER_TAG installed successfully."
