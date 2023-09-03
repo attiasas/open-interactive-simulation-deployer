@@ -7,6 +7,7 @@ public class SimulationDeployerExtension {
     private String configPath;
     private String runnerPath;
     private String assetsPath;
+    private String androidSdkPath;
 
     public SimulationDeployerExtension(Project project) {
         this.project = project;
@@ -34,5 +35,13 @@ public class SimulationDeployerExtension {
 
     public void setAssetsPath(String assetsPath) {
         this.assetsPath = assetsPath;
+    }
+
+    public String getAndroidSdkPath() {
+        return androidSdkPath;
+    }
+
+    public void setAndroidSdkPath(String androidSdkPath) {
+        this.androidSdkPath = androidSdkPath;
     }
 }

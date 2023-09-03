@@ -17,15 +17,18 @@ public class Constant {
 
     // The group of the tasks added by the plugin
     public static final String GROUP_NAME = ProjectUtils.OIS;
-
+    // the name of the plugin directory at home user
+    public static final String OIS_DIRECTORY_NAME = "." + ProjectUtils.OIS;
     // The plugin directory in the user home
-    public static final Path HOME_PATH = Paths.get(System.getProperty("user.home"), ProjectUtils.OIS_DIRECTORY_NAME);
+    public static final Path HOME_PATH = Paths.get(System.getProperty("user.home"), OIS_DIRECTORY_NAME);
     // The directory that cache the runners
     public static final Path RUNNERS_PATH = HOME_PATH.resolve("runners");
     // The version of the runners compatible with the plugin version
     public static final String RUNNER_VERSION = "0.1";
-    // Minimum Gradle version to run the plugin
+    // Minimum Gradle version to run the plugin - for desktop publish
     public static final Version MIN_GRADLE_VERSION = new Version("7.0.0");
+    // Minimum Java version to run the plugin - for desktop publish
+    public static final Version MIN_JAVA_VERSION = new Version("15");
     // The default name that will be when simulation.ois is created
     public static final String DEFAULT_PROJECT_TITLE = "OIS Simulation";
     public static final Set<AppConfiguration.AppType> APP_TYPES = new HashSet<>(List.of(AppConfiguration.AppType.Desktop));
@@ -47,6 +50,9 @@ public class Constant {
 
     public static final String RUN_DESKTOP_TASK_NAME = "runDesktop";
     public static final String RUN_DESKTOP_TASK_DESCRIPTION = "Runs the simulation using desktop";
+
+    public static final String RUN_ANDROID_TASK_NAME = "runAndroid";
+    public static final String RUN_ANDROID_TASK_DESCRIPTION = "Runs the simulation using android device";
 
     public static final String DEPLOY_TASK_NAME = "deployProject";
     public static final String DEPLOY_TASK_DESCRIPTION = "Deploy the project to production files for each platform";

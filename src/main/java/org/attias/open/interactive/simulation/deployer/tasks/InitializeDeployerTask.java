@@ -9,8 +9,6 @@ import org.gradle.api.tasks.TaskAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 public class InitializeDeployerTask extends DefaultTask {
 
     private static final Logger log = LoggerFactory.getLogger(InitializeDeployerTask.class);

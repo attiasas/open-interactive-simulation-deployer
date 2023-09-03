@@ -102,7 +102,7 @@ Download the installation bash [script](src/main/resources/installOIS.sh) and ru
 4. [Optional, Recommended] Add the core library dependency in your project `build.gradle`
    ```groovy
     dependencies {
-        implementation group: 'org.attias.open.interactive.simulation', name: 'open-interactive-simulation-core', version: '1.0-SNAPSHOT'
+        implementation group: 'org.attias.open.interactive.simulation', name: 'open-interactive-simulation-core', version: '0.1'
     }
    ```
 
@@ -114,17 +114,19 @@ a file known as `simulation.ois`. This file will contain all the essential proje
 
 The file follows a JSON format and comprises the subsequent attributes:
 
-| Attribute             | Description                                                                                           |
-|-----------------------|-------------------------------------------------------------------------------------------------------|
-| title                 | The designated title of your simulation project.                                                      |
-| initialState          | The state that will be activated upon initiating the simulation.                                      |
-| states                | A mapping of all implemented IState classes within your project, along with their corresponding keys. |
-| publish               | The configurations for publishing your OIS project and facilitating its distribution.                 |
-| publish.platforms     | The designated platforms on which the simulation will operate, with at least one platform defined.    |
-| publish.iconsDir      | [Optional] The directory housing all project icons.                                                   |
-| publish.publishedName | [Optional, Default is the project name] The name of the resulting artifacts upon publishing.          |
+| Attribute                    | Description                                                                                           |
+|------------------------------|-------------------------------------------------------------------------------------------------------|
+| title                        | The designated title of your simulation project.                                                      |
+| initialState                 | The state that will be activated upon initiating the simulation.                                      |
+| states                       | A mapping of all implemented IState classes within your project, along with their corresponding keys. |
+| publish                      | The configurations for publishing your OIS project and facilitating its distribution.                 |
+| publish.platforms            | The designated platforms on which the simulation will operate, with at least one platform defined.    |
+| publish.publishedName        | [Optional, default is the project name] The name of the resulting artifacts upon publishing.          |
+| publish.publishNumber        | [Optional default is 1] the publishing version number (typically incremented with each release).      |
+| publish.iconsDir             | [Optional] The directory housing all project icons, must follow the [configurations](#-custom-icons). |
+| publish.generateMissingIcons | [Optional, default is false] try to generate missing icons base on `iconsDir` attribute content.      |
 
-For instance:
+For instance (minimal, only required attributes):
 ```json
 {
   "title" : "OIS simulation", 
@@ -135,23 +137,10 @@ For instance:
     "Green" : "org.example.GreenState"
   },
   "publish" : {
-    "platforms" : [ "Desktop" ]
+    "platforms" : [ "Desktop", "Android" ]
   }
 }
 ```
-
-### Custom Icons
-
-You have the opportunity to tailor your own custom icons for the project.
-A designated directory should be provided to accommodate these icons.
-You are not obliged to provide a complete set of icons; any missing icons will be substituted with default counterparts.
-
-The directory must contain only one item per combination of dimensions and extensions.
-If multiple items exist, only one will be considered.
-
-The valid extensions for icons are: `png`, `ico`, `icns`.
-
-Acceptable icon dimensions include: `128x128`, `32x32`, `16x16`.
 
 ### Plugin Extension
 For seamless development, the option to override specific project `simulation.ois` or plugin configurations is available.
@@ -160,15 +149,72 @@ This can be achieved by specifying the `oisDeployer` extension within your `buil
 ```groovy
 oisDeployer {
     // Instead of resolving the runner based on its version in simulation.ois, 
-    // run the runner project from this directory.
+    // Run the runner project from this directory.
     runnerPath = 'path-to-dir-of-specific-runner'
     // Instead of retrieving the project configurations from the `simulation.ois` file in the project root directory,
-    // obtain project configurations from this file.
+    // Obtain project configurations from this file.
     configPath = 'path-to-your-simulation-config-file'
-    // Rather than resolving the assets directory from your project resources, resolve it from this path.
+    // Rather than resolving the assets directory from your project resources
+    // Resolve it from this path.
     assetsPath = 'path-to-your-resources-dir'
+    // Rather than resolving the Android Sdk location from the environment variable 'ANDROID_HOME'
+    // Resolve it from this path.
+    androidSdkPath = 'path-to-android-sdk-dir'
 }
 ```
+
+### 🖼️ Custom Icons
+
+You have the opportunity to tailor your own custom icons for the project.
+A designated directory should be provided to accommodate these icons.
+You are not obliged to provide a complete set of icons; any missing icons will be substituted with default counterparts,
+or generated from the existing subset.
+
+The directory must contain only one item per combination of dimensions and extensions.
+If multiple items exist, only one will be considered.
+
+<details>
+<summary>Desktop Platform Icons</summary>
+
+---
+
+The valid extensions for icons are:
+* **Windows:** `png`, `ico` (optional).
+* **Linux:** `png`.
+* **Mac:** `icns`.
+
+Acceptable icon dimensions include: `128x128`, `32x32`.
+
+---
+</details>
+
+<details>
+<summary>Android Platform Icons</summary>
+
+---
+
+The icon that will be shown as the app has to be in `xml` format and be generated by following this steps:
+1. **Generate your Icon**.
+   * Must be in `svg` / `psd` format. 
+   * Colors must be in black and white (can color shapes later).
+   * Must be `108x108`, the logo should be centered, must be at least `48x48` dp; it must not exceed `72x72` dp because the inner `72x72` dp of the icon appears within the masked viewport.
+2. **Open, in intellij, any `Android` project** (or use the runner project cloned to the `ois` plugin directory in your `$HOME` directory).
+   
+    2.1. On the Project tab, right click: `New` -> `Vector Asset`
+
+    2.2. Chose `Asset type` value to `Local file (SVG, PSD)` the path and the target name.
+
+    2.3. Chose `108dpx108dp` as the value for `Sizw`.
+
+    2.4. Continue and generate the `xml` file and copy it to your `iconsDir`.
+ 
+3. **[Optional] Color** the generated icon shapes (`paths` tag) by editing the `xml` file and changing their `fillColor` values.
+
+In addition, you can provide `png` icons for specific dpi,
+Acceptable icon dimensions include: `48x48`, `72x72`, `96x96`, `144x144`, `192x192`.
+
+---
+</details>
 
 ---
 ## 🏗️ How to Use
@@ -193,10 +239,33 @@ for insights into leveraging the core library effectively.
 
 ### 👀 Running Your Project
 
-After applying the [configurations](#-project-configurations), you can run your project locally on your `Desktop` by executing:
+To plugin will create running tasks to debug your project for each value you input at `publish.platforms` attribute in the [configurations](#-project-configurations).
+
+<details>
+<summary>Desktop Platform</summary>
+
+---
+After applying the configurations, you can run your project locally on your `Desktop` by executing:
    ```bash
    gradlew runDesktop
    ```
+---
+</details>
+
+<details>
+<summary>Android Platform</summary>
+
+---
+After applying the configurations, you can run your project on a virtual/physical `Android` device by executing:
+1. Make sure there is an active device connected (can use Intellij).
+2. Run the following gradle command:
+   ```bash
+   gradlew runAndroid
+   ```
+> Some changes may require to uninstall the application before rerunning.
+---
+</details>
+
 
 ### 🚀 Distributing Your Project
 
@@ -206,13 +275,17 @@ These files are essential for running your project on the designated platforms. 
    gradlew deployProject
    ```
 
-> **Distributing on the Desktop Platform:**
-> 
-> Note that the generated zip files are specific to the platform they were built on. 
-> For instance, generate the distribution task on a Windows machine for Windows distribution and on a Linux machine for Linux distribution.
-
 The artifacts intended for distribution will be created within your project's `build` directory.
 Inside this directory, you'll find a folder named `OIS` containing zip files tailored for each platform configuration specified in your project's configuration file.
+
+> **Publishing to Desktop Platform:**
+>
+> Note that the generated zip files are specific to the platform they were built on.
+> For instance, generate the distribution task on a Windows machine for Windows distribution and on a Linux machine for Linux distribution.
+
+> **Publishing to Android Platform:**
+> 
+> Note that the generated apk is unsigned and should be signed before distribution.
 
 ---
 ## 🐞 Reporting Issues
@@ -222,7 +295,7 @@ we recommend using the `-d` option when running Gradle for detailed debug inform
 
 If you face issues with running or deploying your project, start fresh by cleaning the runners:
 ```bash
-    gradlew cleanRunners
+gradlew cleanRunners
 ```
 
 To contribute to the library's improvement, 

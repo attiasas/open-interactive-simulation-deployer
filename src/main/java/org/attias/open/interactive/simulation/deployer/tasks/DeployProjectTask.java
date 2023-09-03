@@ -2,9 +2,7 @@ package org.attias.open.interactive.simulation.deployer.tasks;
 
 import org.attias.open.interactive.simulation.core.backend.config.ProjectConfiguration;
 import org.attias.open.interactive.simulation.core.backend.engine.AppConfiguration;
-import org.attias.open.interactive.simulation.core.backend.utils.ProjectUtils;
 import org.attias.open.interactive.simulation.core.utils.IOUtils;
-import org.attias.open.interactive.simulation.deployer.OISException;
 import org.attias.open.interactive.simulation.deployer.backend.RunnerManager;
 import org.attias.open.interactive.simulation.deployer.utils.DeployUtils;
 import org.attias.open.interactive.simulation.deployer.utils.GradleUtils;
@@ -14,7 +12,10 @@ import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
@@ -27,79 +28,29 @@ public class DeployProjectTask extends DefaultTask {
     private static final Logger log = LoggerFactory.getLogger(DeployProjectTask.class);
 
     @TaskAction
-    public void deployProject() throws IOException {
-        log.info("{}: Starting to deploy project to all configured platforms", getPath());
+    public void deployProject() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+        Project project = getProject();
+        String projectPath = getPath();
+        log.info("{}: Starting to deploy project to all configured platforms", projectPath);
         // Phase 1: Prepare for deployment
-        deployValidations();
-        cleanTargetAssetsDirectory();
-        ProjectConfiguration configuration = generateTargetAssetsDirectory();
-        Path targetLibDirectory = PluginUtils.getProjectOISLibsPath(getProject());
+        ProjectConfiguration configuration = DeployUtils.prepareRunnersForDeployment(project);
+        Path targetLibDirectory = PluginUtils.getProjectOISLibsPath(project);
         if (IOUtils.createDirIfNotExists(targetLibDirectory, true)) {
-            log.info("{}: Created OIS directory for the deployed artifacts at {}", getPath(), targetLibDirectory);
+            log.info("{}: Created OIS directory for the deployed artifacts at {}", projectPath, targetLibDirectory);
         }
         // Phase 2: Deploy with runners to all platform
         Set<AppConfiguration.AppType> platforms = configuration.publish.platforms;
         for (AppConfiguration.AppType platform : platforms) {
             deployProjectWithRunner(platform);
         }
-        log.info("{}: Deploying OIS project task ended successfully.", getPath());
-    }
-
-    private void deployValidations() {
-        log.info("{}: Validating project for deployment", getPath());
-        if (PluginUtils.getProjectAssetsDirectory(getProject()).resolve(ProjectUtils.OIS_DIRECTORY_NAME).toFile().exists()) {
-            throw new OISException("Can't deploy a project with resource directory named '" + ProjectUtils.OIS_DIRECTORY_NAME + "'");
-        }
-    }
-
-    private void cleanTargetAssetsDirectory() {
-        log.info("{}: Clean runner asset directory", getPath());
-        IOUtils.deleteDirectoryContent(PluginUtils.getTargetAssetsDirectory(getProject()));
-    }
-
-    /**
-     * Runner Assets directory structure at deploy:
-     * - TargetAssetsDir
-     *  - project assets....
-     *  - .ois
-     *      - simulation.ois
-     *      - icons
-     *          - icon.ico (windows for all dims)
-     *          - icon.png (windows/linux for all dims)
-     *          - icon.icns (mac for all dims)
-     * @return configurations that was saved as 'simulation.ois'
-     * @throws IOException
-     */
-    private ProjectConfiguration generateTargetAssetsDirectory() throws IOException {
-        log.info("{}: Generating runner asset directory for deployment", getPath());
-        Path targetAssetsDir = PluginUtils.getTargetAssetsDirectory(getProject());
-        // Copy project resources to target
-        log.info("{}: Copy project resources to target", getPath());
-        Path projectAssetsDir = PluginUtils.getProjectAssetsDirectory(getProject());
-        IOUtils.copyDirectoryContent(projectAssetsDir, targetAssetsDir);
-        // Generate OIS assets needed for deployments at target
-        log.info("{}: Generate OIS assets needed for deployments at target", getPath());
-        Path oisAssetsDir = targetAssetsDir.resolve(ProjectUtils.OIS_DIRECTORY_NAME);
-        IOUtils.createDirIfNotExists(oisAssetsDir,true);
-        // Create project configurations
-        log.info("{}: Create project configurations", getPath());
-        ProjectConfiguration configuration = PluginUtils.getProjectConfiguration(getProject());
-        IOUtils.writeAsJsonFile(configuration, oisAssetsDir.resolve(ProjectConfiguration.DEFAULT_FILE_NAME));
-        // Create icons assets
-        log.info("{}: Create icons assets", getPath());
-        Path iconsDir = oisAssetsDir.resolve("icons");
-        IOUtils.createDirIfNotExists(iconsDir, true);
-        ClassLoader defaultIconsLoader = Thread.currentThread().getContextClassLoader();
-        DeployUtils.copyIconsToRunner(configuration, iconsDir, defaultIconsLoader);
-
-        return configuration;
+        log.info("{}: Deploying OIS project task ended successfully.", projectPath);
     }
 
     /**
      * 1. Deploy for platform
      * 2. Zip generated artifacts
      * 3. Copy to OIS lib directory
-     * @param platform
+     * @param platform - runner platform
      * @throws IOException
      */
     private void deployProjectWithRunner(AppConfiguration.AppType platform) throws IOException {

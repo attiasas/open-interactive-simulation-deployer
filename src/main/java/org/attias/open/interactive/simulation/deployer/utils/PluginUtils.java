@@ -3,6 +3,7 @@ package org.attias.open.interactive.simulation.deployer.utils;
 import org.attias.open.interactive.simulation.core.backend.config.ProjectConfiguration;
 import org.attias.open.interactive.simulation.core.backend.utils.ProjectUtils;
 import org.attias.open.interactive.simulation.core.utils.IOUtils;
+import org.attias.open.interactive.simulation.core.utils.JsonUtils;
 import org.attias.open.interactive.simulation.deployer.Constant;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -72,7 +73,7 @@ public class PluginUtils {
             return false;
         }
         log.info("Creating default project configurations at {}", configPath);
-        IOUtils.writeAsJsonFile(createProjectConfiguration(), configPath);
+        JsonUtils.writeAsJsonFile(createProjectConfiguration(), configPath);
         return true;
     }
 
@@ -107,5 +108,13 @@ public class PluginUtils {
             return name;
         }
         return project.getName();
+    }
+
+    public static String getProjectPublishNumber(Project project) throws IOException {
+        Integer number = getProjectConfiguration(project).publish.publishNumber;
+        if (number != null && number > 0) {
+            return "" + number;
+        }
+        return "1";
     }
 }

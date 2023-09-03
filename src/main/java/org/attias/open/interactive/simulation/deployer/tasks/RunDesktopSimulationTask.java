@@ -15,6 +15,6 @@ public class RunDesktopSimulationTask extends DefaultTask {
     @TaskAction
     public void runSimulation() throws IOException {
         log.info("{} Running desktop simulation", getPath());
-        RunnerManager.executeRunOnPlatform(getProject(), AppConfiguration.AppType.Desktop);
+        RunnerManager.executeRunOnPlatform(getProject(), RunnerManager.getRunningEnvVariables(getProject()), AppConfiguration.AppType.Desktop, false);
     }
 }
