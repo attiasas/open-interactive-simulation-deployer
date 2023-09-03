@@ -40,39 +40,49 @@ Simplify development and distribution and embrace a more streamlined process.
 ---
 ## 📦 Installation
 
-The plugin is not available in Maven central yet, required to be installed locally
+The plugin is not yet available in Maven Central and must be installed locally.
 
 <details>
 <summary>Manual installation</summary>
 
-Install locally OIS core library
-1. Clone the [core library](https://github.com/attiasas/open-interactive-simulation-core)
+To install the **OIS core** library locally:
+
+1. Clone the [core library](https://github.com/attiasas/open-interactive-simulation-core) repository:
     ```bash
      git clone https://github.com/attiasas/open-interactive-simulation-core.git
    ```
-2. Navigate to the cloned directory and publish the library to maven local
+2. Navigate to the cloned directory and publish the library to Maven Local:
    ```bash
     ./gradlew publishToMavenLocal
    ```
 
-Install locally the plugin
-1. Clone this repository
+To install the **plugin** locally:
+
+1. Clone this repository:
     ```bash
      git clone https://github.com/attiasas/open-interactive-simulation-deployer.git
    ```
-2. Navigate to the cloned directory and publish the library to maven local
+2. Navigate to the cloned directory and publish the library to Maven Local:
    ```bash
     ./gradlew publishToMavenLocal
    ```
-
+---
 </details>
 
-Download the installation bash [script](src/main/resources/installOIS.sh) and run it:
+Download the installation bash [script](src/main/resources/installOIS.sh) and execute it:
 ```bash
-./installOIS.sh
+./installOIS.sh [-d <deployer_tag>] [-c <core_tag>] [-h]
 ```
+The script can be used to install the OIS core library and the deployer plugin. It accepts the following options:
+
+* `-d <deployer_tag>`: Specify the deployer tag (default: master).
+* `-c <core_tag>`: Specify the core tag (optional, determined automatically if not specified).
+* `-h`: Display this help message.
 
 ---
+
+### Import plugin to your project
+
 1. Add at the top of your `settings.gradle` the following snippet
    ```groovy
     pluginManagement {
